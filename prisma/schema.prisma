@@ -1,0 +1,103 @@
+// ============================================
+// Prisma スキーマファイル
+// ここに「データベースにどんな表（テーブル）を作るか」を定義します。
+// 1つの model = 1つのテーブル、というイメージです。
+// ============================================
+
+// --- 基本設定 ---
+// Prisma自体の設定。基本的にここは変更不要です。
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 使用するデータベースの種類と接続先を指定します。
+// url は .env ファイルに書いた DATABASE_URL という変数を読み込みます。
+// （Supabaseでプロジェクトを作ると、この接続文字列が発行されます）
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // directUrl: マイグレーション実行時など、プーリングを経由しない
+  // 「直接接続」が必要な場面でPrismaが使う接続先
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================
+// ここから実際のテーブル定義
+// ============================================
+
+// 【事務所】ホロライブ、にじさんじ、あおぎり高校 など
+model Office {
+  // id: このレコードを一意に識別するID。cuid()で自動生成される文字列を使う
+  id     String  @id @default(cuid())
+
+  // name: 事務所名（例: "ホロライブプロダクション"）
+  name   String
+
+  // groups: この事務所に所属するグループの一覧（1つの事務所に複数グループ）
+  // これは実際のカラムではなく、Group側とのつながりを表す「関連」です
+  groups Group[]
+}
+
+// 【グループ】ホロライブ内の「ゲーマーズ」「秘密結社holoX」など
+model Group {
+  id       String   @id @default(cuid())
+  name     String
+
+  // officeId: どの事務所に属しているかを表す外部キー（Officeのidを格納）
+  officeId String
+
+  // office: officeIdを使ってOfficeテーブルと紐付ける設定
+  office   Office   @relation(fields: [officeId], references: [id])
+
+  // talents: このグループに所属するタレント一覧
+  talents  Talent[]
+}
+
+// 【タレント】個々のVTuber本人
+model Talent {
+  id       String    @id @default(cuid())
+  name     String
+
+  // groupId: どのグループに所属しているか（Groupのidを格納）
+  groupId  String
+  group    Group     @relation(fields: [groupId], references: [id])
+
+  // channels: このタレントが持つチャンネル一覧
+  // （YouTubeだけでなく、将来的にX(Twitter)なども同じ形で追加できるようにしています）
+  channels Channel[]
+}
+
+// 【チャンネル】YouTubeチャンネルやX(Twitter)アカウントなど、外部サービスとの連携情報
+model Channel {
+  id         String   @id @default(cuid())
+
+  // talentId: このチャンネルが誰のものか（Talentのidを格納）
+  talentId   String
+  talent     Talent   @relation(fields: [talentId], references: [id])
+
+  // platform: "youtube" や "twitter" など、どのサービスかを表す文字列
+  platform   String
+
+  // externalId: そのサービス上でのID
+  // （YouTubeなら「チャンネルID」、Xなら「ユーザー名」など）
+  externalId String
+
+  // snapshots: このチャンネルの登録者数を記録した履歴（1日1件ずつ増えていく想定）
+  snapshots  SubscriberSnapshot[]
+}
+
+// 【登録者数スナップショット】「いつ・何人だったか」を記録するログテーブル
+// これを毎日1件ずつ貯めていくことで「前日比」「先月比」のグラフが作れるようになります
+model SubscriberSnapshot {
+  id        String   @id @default(cuid())
+
+  // channelId: どのチャンネルの記録か
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id])
+
+  // count: 記録した時点での登録者数
+  count     Int
+
+  // fetchedAt: いつ記録したか（何も指定しなければ「今」が自動で入る）
+  fetchedAt DateTime @default(now())
+}
