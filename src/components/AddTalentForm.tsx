@@ -80,23 +80,23 @@ export default function AddTalentForm({ groups }: AddTalentFormProps) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-[#171724] border border-[#2a2a3d] p-5">
-        <h2 className="text-[#f5f5fa] font-semibold mb-4">1. タレント情報</h2>
+      <div className="rounded-2xl bg-white border border-[#e4e4ec] p-5 shadow-sm">
+        <h2 className="text-[#14141c] font-semibold mb-4">1. タレント情報</h2>
 
-        <label className="block text-xs text-[#9797ab] mb-1">タレント名</label>
+        <label className="block text-xs text-[#70707f] mb-1">タレント名</label>
         <input
           type="text"
           value={talentName}
           onChange={(e) => setTalentName(e.target.value)}
           placeholder="例: 星街すいせい"
-          className="w-full rounded-lg bg-[#0f0f17] border border-[#2a2a3d] text-[#f5f5fa] px-3 py-2 mb-4 outline-none focus:border-[#00e0ff]/60"
+          className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 mb-4 outline-none focus:border-[#0891b2]/60"
         />
 
-        <label className="block text-xs text-[#9797ab] mb-1">所属グループ</label>
+        <label className="block text-xs text-[#70707f] mb-1">所属グループ</label>
         <select
           value={groupId}
           onChange={(e) => setGroupId(e.target.value)}
-          className="w-full rounded-lg bg-[#0f0f17] border border-[#2a2a3d] text-[#f5f5fa] px-3 py-2 outline-none focus:border-[#00e0ff]/60"
+          className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60"
         >
           {groups.map((group) => (
             <option key={group.id} value={group.id}>
@@ -106,8 +106,8 @@ export default function AddTalentForm({ groups }: AddTalentFormProps) {
         </select>
       </div>
 
-      <div className="rounded-2xl bg-[#171724] border border-[#2a2a3d] p-5">
-        <h2 className="text-[#f5f5fa] font-semibold mb-4">2. YouTubeチャンネルを検索</h2>
+      <div className="rounded-2xl bg-white border border-[#e4e4ec] p-5 shadow-sm">
+        <h2 className="text-[#14141c] font-semibold mb-4">2. YouTubeチャンネルを検索</h2>
 
         <div className="flex gap-2">
           <input
@@ -116,12 +116,12 @@ export default function AddTalentForm({ groups }: AddTalentFormProps) {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             placeholder="チャンネル名で検索"
-            className="flex-1 rounded-lg bg-[#0f0f17] border border-[#2a2a3d] text-[#f5f5fa] px-3 py-2 outline-none focus:border-[#00e0ff]/60"
+            className="flex-1 rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60"
           />
           <button
             onClick={handleSearch}
             disabled={isSearching}
-            className="rounded-lg bg-[#00e0ff] text-[#0f0f17] font-semibold px-4 py-2 hover:opacity-90 disabled:opacity-50"
+            className="rounded-lg bg-[#0891b2] text-white font-semibold px-4 py-2 hover:opacity-90 disabled:opacity-50"
           >
             {isSearching ? "検索中..." : "検索"}
           </button>
@@ -131,7 +131,7 @@ export default function AddTalentForm({ groups }: AddTalentFormProps) {
           {searchResults.map((channel) => (
             <div
               key={channel.channelId}
-              className="flex items-center gap-3 rounded-lg bg-[#0f0f17] p-3"
+              className="flex items-center gap-3 rounded-lg bg-[#f5f6fa] p-3"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -140,12 +140,12 @@ export default function AddTalentForm({ groups }: AddTalentFormProps) {
                 className="h-10 w-10 rounded-full"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-[#f5f5fa] text-sm truncate">{channel.title}</p>
-                <p className="text-[#9797ab] text-xs truncate">{channel.channelId}</p>
+                <p className="text-[#14141c] text-sm truncate">{channel.title}</p>
+                <p className="text-[#70707f] text-xs truncate">{channel.channelId}</p>
               </div>
               <button
                 onClick={() => handleRegister(channel)}
-                className="shrink-0 rounded-lg bg-[#ff4fa3] text-[#0f0f17] text-sm font-semibold px-3 py-1.5 hover:opacity-90"
+                className="shrink-0 rounded-lg bg-[#ec4899] text-white text-sm font-semibold px-3 py-1.5 hover:opacity-90"
               >
                 このチャンネルを登録
               </button>
@@ -155,7 +155,7 @@ export default function AddTalentForm({ groups }: AddTalentFormProps) {
       </div>
 
       {message && (
-        <p className="text-sm text-[#00e0ff]">{message}</p>
+        <p className="text-sm text-[#0891b2]">{message}</p>
       )}
     </div>
   );

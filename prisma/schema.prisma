@@ -58,6 +58,9 @@ model Talent {
   id       String    @id @default(cuid())
   name     String
 
+  // sortOrder: トップページでの表示順。数字が小さいほど先に表示される
+  sortOrder Int      @default(0)
+
   // groupId: どのグループに所属しているか（Groupのidを格納）
   groupId  String
   group    Group     @relation(fields: [groupId], references: [id])
@@ -73,7 +76,8 @@ model Channel {
 
   // talentId: このチャンネルが誰のものか（Talentのidを格納）
   talentId   String
-  talent     Talent   @relation(fields: [talentId], references: [id])
+  // onDelete: Cascade → タレントが削除された時、紐づくチャンネルも自動的に削除される
+  talent     Talent   @relation(fields: [talentId], references: [id], onDelete: Cascade)
 
   // platform: "youtube" や "twitter" など、どのサービスかを表す文字列
   platform   String
