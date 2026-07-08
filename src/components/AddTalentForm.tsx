@@ -119,7 +119,7 @@ export default function AddTalentForm({
           type="text"
           value={talentName}
           onChange={(e) => setTalentName(e.target.value)}
-          placeholder="例: 儒烏風亭らでん"
+          placeholder="例: ときのそら"
           className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 mb-4 outline-none focus:border-[#0891b2]/60"
         />
 

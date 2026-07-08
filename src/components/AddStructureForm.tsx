@@ -171,7 +171,7 @@ export default function AddStructureForm({
             type="text"
             value={newGroupName}
             onChange={(e) => setNewGroupName(e.target.value)}
-            placeholder="例: hololive EN"
+            placeholder="例: ホロライブ"
             className="flex-1 rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60"
           />
           <button
@@ -204,7 +204,7 @@ export default function AddStructureForm({
             type="text"
             value={newUnitName}
             onChange={(e) => setNewUnitName(e.target.value)}
-            placeholder="例: ReGLOSS"
+            placeholder="例: 0期生"
             className="flex-1 rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60"
           />
           <button
