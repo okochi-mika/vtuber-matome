@@ -2,11 +2,16 @@ import { prisma } from "@/lib/prisma";
 import AddTalentForm from "@/components/AddTalentForm";
 
 export default async function AddTalentPage() {
+  const offices = await prisma.office.findMany({
+    select: { id: true, name: true },
+  });
+
   const groups = await prisma.group.findMany({
-    select: {
-      id: true,
-      name: true,
-    },
+    select: { id: true, name: true, officeId: true },
+  });
+
+  const units = await prisma.unit.findMany({
+    select: { id: true, name: true, groupId: true },
   });
 
   return (
@@ -24,13 +29,13 @@ export default async function AddTalentPage() {
           </p>
         </header>
 
-        {groups.length === 0 ? (
+        {units.length === 0 ? (
           <p className="text-[#70707f] text-sm">
-            グループが1件も登録されていません。先にSupabaseの管理画面から
-            Officeテーブル・Groupテーブルにデータを追加してください。
+            ユニットが1件も登録されていません。先に「タレント管理」画面から
+            事務所・グループ・ユニットを作成してください。
           </p>
         ) : (
-          <AddTalentForm groups={groups} />
+          <AddTalentForm offices={offices} groups={groups} units={units} />
         )}
       </div>
     </main>

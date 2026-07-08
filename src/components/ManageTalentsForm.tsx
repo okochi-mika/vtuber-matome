@@ -2,38 +2,34 @@
 
 import { useState } from "react";
 
-type Group = {
+type Unit = {
   id: string;
   name: string;
+  groupLabel: string; // 表示用: "事務所名 / グループ名 / ユニット名"
 };
 
 type TalentItem = {
   id: string;
   name: string;
-  groupId: string;
+  unitId: string;
   channelId: string;
 };
 
 type ManageTalentsFormProps = {
   initialTalents: TalentItem[];
-  groups: Group[];
+  units: Unit[];
 };
 
 export default function ManageTalentsForm({
   initialTalents,
-  groups,
+  units,
 }: ManageTalentsFormProps) {
-  // タレント一覧をこのコンポーネントの中で管理する（編集・削除・並び替えの全ての起点）
   const [talents, setTalents] = useState<TalentItem[]>(initialTalents);
   const [messages, setMessages] = useState<Record<string, string>>({});
 
-  // ---------------------------------------------
-  // 入力欄が変更された時、その場でstateを書き換える
-  // （まだサーバーには送らない。「保存」ボタンを押すまでは一時的な変更）
-  // ---------------------------------------------
   function handleFieldChange(
     talentId: string,
-    field: "name" | "groupId" | "channelId",
+    field: "name" | "unitId" | "channelId",
     value: string
   ) {
     setTalents((prev) =>
@@ -41,9 +37,6 @@ export default function ManageTalentsForm({
     );
   }
 
-  // ---------------------------------------------
-  // 「保存」ボタン: 編集内容をサーバーに送って更新する
-  // ---------------------------------------------
   async function handleSave(talentId: string) {
     const talent = talents.find((t) => t.id === talentId);
     if (!talent) return;
@@ -53,7 +46,7 @@ export default function ManageTalentsForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: talent.name,
-        groupId: talent.groupId,
+        unitId: talent.unitId,
         channelId: talent.channelId,
       }),
     });
@@ -64,9 +57,6 @@ export default function ManageTalentsForm({
     }));
   }
 
-  // ---------------------------------------------
-  // 「削除」ボタン: 確認ダイアログを出してからサーバーに削除リクエストを送る
-  // ---------------------------------------------
   async function handleDelete(talentId: string, talentName: string) {
     const confirmed = window.confirm(
       `「${talentName}」を削除します。よろしいですか？`
@@ -78,7 +68,6 @@ export default function ManageTalentsForm({
     });
 
     if (response.ok) {
-      // 画面上の一覧からも取り除く
       setTalents((prev) => prev.filter((t) => t.id !== talentId));
     } else {
       setMessages((prev) => ({
@@ -88,25 +77,17 @@ export default function ManageTalentsForm({
     }
   }
 
-  // ---------------------------------------------
-  // 並び替え: 配列の中身を入れ替えて、その新しい順番をサーバーに保存する
-  // ---------------------------------------------
   async function moveTalent(index: number, direction: "up" | "down") {
     const newIndex = direction === "up" ? index - 1 : index + 1;
-
-    // 範囲外への移動は何もしない（一番上でさらに上へ、一番下でさらに下へ、など）
     if (newIndex < 0 || newIndex >= talents.length) return;
 
     const newTalents = [...talents];
-    // 配列の中で2つの要素の位置を入れ替える
     [newTalents[index], newTalents[newIndex]] = [
       newTalents[newIndex],
       newTalents[index],
     ];
-
     setTalents(newTalents);
 
-    // 新しい並び順をサーバーに保存する
     await fetch("/api/talents/reorder", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -124,7 +105,6 @@ export default function ManageTalentsForm({
           className="rounded-2xl bg-white border border-[#e4e4ec] p-5 shadow-sm"
         >
           <div className="flex items-start gap-4">
-            {/* 並び替え用の上下矢印ボタン */}
             <div className="flex flex-col gap-1 pt-1">
               <button
                 onClick={() => moveTalent(index, "up")}
@@ -144,7 +124,6 @@ export default function ManageTalentsForm({
               </button>
             </div>
 
-            {/* 編集項目 */}
             <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs text-[#70707f] mb-1">
@@ -162,18 +141,18 @@ export default function ManageTalentsForm({
 
               <div>
                 <label className="block text-xs text-[#70707f] mb-1">
-                  所属グループ
+                  所属ユニット
                 </label>
                 <select
-                  value={talent.groupId}
+                  value={talent.unitId}
                   onChange={(e) =>
-                    handleFieldChange(talent.id, "groupId", e.target.value)
+                    handleFieldChange(talent.id, "unitId", e.target.value)
                   }
                   className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60"
                 >
-                  {groups.map((group) => (
-                    <option key={group.id} value={group.id}>
-                      {group.name}
+                  {units.map((unit) => (
+                    <option key={unit.id} value={unit.id}>
+                      {unit.groupLabel}
                     </option>
                   ))}
                 </select>
@@ -195,7 +174,6 @@ export default function ManageTalentsForm({
             </div>
           </div>
 
-          {/* 保存・削除ボタンと結果メッセージ */}
           <div className="flex items-center gap-2 mt-4 pl-11">
             <button
               onClick={() => handleSave(talent.id)}

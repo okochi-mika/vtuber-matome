@@ -38,7 +38,7 @@ model Office {
   groups Group[]
 }
 
-// 【グループ】ホロライブ内の「ゲーマーズ」「秘密結社holoX」など
+// 【グループ】ホロライブ内の「ホロライブ」「hololive EN」など
 model Group {
   id       String   @id @default(cuid())
   name     String
@@ -49,8 +49,23 @@ model Group {
   // office: officeIdを使ってOfficeテーブルと紐付ける設定
   office   Office   @relation(fields: [officeId], references: [id])
 
-  // talents: このグループに所属するタレント一覧
-  talents  Talent[]
+  // units: このグループに属するユニットの一覧
+  units    Unit[]
+}
+
+// 【ユニット】グループの中の「ReGLOSS」「秘密結社holoX」のような小グループ
+// 特にユニットに属さないタレントのために、
+// 「本体」のような汎用ユニットを1つ作っておく運用を想定しています
+model Unit {
+  id      String   @id @default(cuid())
+  name    String
+
+  // groupId: どのグループに属しているか（Groupのidを格納）
+  groupId String
+  group   Group    @relation(fields: [groupId], references: [id])
+
+  // talents: このユニットに所属するタレント一覧
+  talents Talent[]
 }
 
 // 【タレント】個々のVTuber本人
@@ -61,9 +76,9 @@ model Talent {
   // sortOrder: トップページでの表示順。数字が小さいほど先に表示される
   sortOrder Int      @default(0)
 
-  // groupId: どのグループに所属しているか（Groupのidを格納）
-  groupId  String
-  group    Group     @relation(fields: [groupId], references: [id])
+  // unitId: どのユニットに所属しているか（Unitのidを格納）
+  unitId   String
+  unit     Unit      @relation(fields: [unitId], references: [id])
 
   // channels: このタレントが持つチャンネル一覧
   // （YouTubeだけでなく、将来的にX(Twitter)なども同じ形で追加できるようにしています）

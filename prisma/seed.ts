@@ -1,7 +1,7 @@
 // ============================================
-// シードスクリプト
-// 「事務所 → グループ → タレント → チャンネル」の初期データを
-// DBに1回だけ流し込むためのスクリプトです。
+// シードスクリプト（4階層版）
+// 事務所 → グループ → ユニット → タレント → チャンネル
+// という構造で初期データをDBに流し込みます
 //
 // 実行方法（ターミナルで）:
 //   npx tsx prisma/seed.ts
@@ -23,7 +23,6 @@ async function main() {
 
   // ---------------------------------------------
   // ステップ2: グループ（Group）を作成
-  // 先ほど作った事務所(hololive.id)に紐付ける
   // ---------------------------------------------
   const hololiveGroup = await prisma.group.create({
     data: {
@@ -33,14 +32,30 @@ async function main() {
   });
 
   // ---------------------------------------------
-  // ステップ3: タレント（Talent）とチャンネル（Channel）を作成
-  // タレントを作ると同時に、そのタレントのチャンネル情報も一緒に登録する
-  // （Prismaでは「create」の中で関連するデータもまとめて作成できます）
+  // ステップ3: ユニット（Unit）を作成
+  // 特にユニットに属さないタレント用に「本体」という汎用ユニットも用意しておく
+  // ---------------------------------------------
+  const mainUnit = await prisma.unit.create({
+    data: {
+      name: "本体",
+      groupId: hololiveGroup.id,
+    },
+  });
+
+  const regloss = await prisma.unit.create({
+    data: {
+      name: "ReGLOSS",
+      groupId: hololiveGroup.id,
+    },
+  });
+
+  // ---------------------------------------------
+  // ステップ4: タレント（Talent）とチャンネル（Channel）を作成
   // ---------------------------------------------
   await prisma.talent.create({
     data: {
       name: "hololive公式",
-      groupId: hololiveGroup.id,
+      unitId: mainUnit.id,
       channels: {
         create: [
           {
@@ -54,65 +69,8 @@ async function main() {
 
   await prisma.talent.create({
     data: {
-      name: "ときのそら",
-      groupId: hololiveGroup.id,
-      channels: {
-        create: [
-          {
-            platform: "youtube",
-            externalId: "UCp6993wxpyDPHUpavwDFqgg",
-          },
-        ],
-      },
-    },
-  });
-  await prisma.talent.create({
-    data: {
-      name: "ロボ子さん",
-      groupId: hololiveGroup.id,
-      channels: {
-        create: [
-          {
-            platform: "youtube",
-            externalId: "UCDqI2jOz0weumE8s7paEk6g",
-          },
-        ],
-      },
-    },
-  });
-  await prisma.talent.create({
-    data: {
-      name: "AZKi",
-      groupId: hololiveGroup.id,
-      channels: {
-        create: [
-          {
-            platform: "youtube",
-            externalId: "UC0TXe_LYZ4scaW2XMyi5_kw",
-          },
-        ],
-      },
-    },
-  });
-  await prisma.talent.create({
-    data: {
-      name: "さくらみこ",
-      groupId: hololiveGroup.id,
-      channels: {
-        create: [
-          {
-            platform: "youtube",
-            externalId: "UC-hM6YJuNYVAmUWxeIr9FeA",
-          },
-        ],
-      },
-    },
-  });
-
-  await prisma.talent.create({
-    data: {
       name: "星街すいせい",
-      groupId: hololiveGroup.id,
+      unitId: mainUnit.id,
       channels: {
         create: [
           {
@@ -125,9 +83,9 @@ async function main() {
   });
 
   console.log("シードデータの登録が完了しました");
+  console.log("（ReGLOSSユニットは作成済みです。タレントは管理画面から追加してください）");
 }
 
-// 実行して、終わったら接続を閉じる。エラーが出たら内容を表示する
 main()
   .catch((error) => {
     console.error("シード実行中にエラーが発生しました:", error);

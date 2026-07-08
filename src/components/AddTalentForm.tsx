@@ -3,22 +3,53 @@
 import { useState } from "react";
 import type { ChannelSearchResult } from "@/lib/youtube";
 
-type Group = {
-  id: string;
-  name: string;
-};
+type Office = { id: string; name: string };
+type Group = { id: string; name: string; officeId: string };
+type Unit = { id: string; name: string; groupId: string };
 
 type AddTalentFormProps = {
+  offices: Office[];
   groups: Group[];
+  units: Unit[];
 };
 
-export default function AddTalentForm({ groups }: AddTalentFormProps) {
+export default function AddTalentForm({
+  offices,
+  groups,
+  units,
+}: AddTalentFormProps) {
   const [talentName, setTalentName] = useState("");
-  const [groupId, setGroupId] = useState(groups[0]?.id ?? "");
+
+  // 事務所 → グループ → ユニット の順に絞り込むための選択状態
+  const [officeId, setOfficeId] = useState(offices[0]?.id ?? "");
+  const groupsInOffice = groups.filter((g) => g.officeId === officeId);
+
+  const [groupId, setGroupId] = useState(groupsInOffice[0]?.id ?? "");
+  const unitsInGroup = units.filter((u) => u.groupId === groupId);
+
+  const [unitId, setUnitId] = useState(unitsInGroup[0]?.id ?? "");
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<ChannelSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [message, setMessage] = useState("");
+
+  // 事務所を切り替えたら、グループ・ユニットの選択もその事務所内のものに更新する
+  function handleOfficeChange(newOfficeId: string) {
+    setOfficeId(newOfficeId);
+    const newGroups = groups.filter((g) => g.officeId === newOfficeId);
+    const newGroupId = newGroups[0]?.id ?? "";
+    setGroupId(newGroupId);
+    const newUnits = units.filter((u) => u.groupId === newGroupId);
+    setUnitId(newUnits[0]?.id ?? "");
+  }
+
+  // グループを切り替えたら、ユニットの選択もそのグループ内のものに更新する
+  function handleGroupChange(newGroupId: string) {
+    setGroupId(newGroupId);
+    const newUnits = units.filter((u) => u.groupId === newGroupId);
+    setUnitId(newUnits[0]?.id ?? "");
+  }
 
   async function handleSearch() {
     if (!searchQuery) return;
@@ -53,8 +84,8 @@ export default function AddTalentForm({ groups }: AddTalentFormProps) {
       setMessage("タレント名を入力してください");
       return;
     }
-    if (!groupId) {
-      setMessage("グループを選択してください");
+    if (!unitId) {
+      setMessage("ユニットを選択してください（グループにユニットが無い場合は先に作成してください）");
       return;
     }
 
@@ -63,7 +94,7 @@ export default function AddTalentForm({ groups }: AddTalentFormProps) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: talentName,
-        groupId,
+        unitId,
         channelId: channel.channelId,
       }),
     });
@@ -88,22 +119,56 @@ export default function AddTalentForm({ groups }: AddTalentFormProps) {
           type="text"
           value={talentName}
           onChange={(e) => setTalentName(e.target.value)}
-          placeholder="例: 星街すいせい"
+          placeholder="例: 儒烏風亭らでん"
           className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 mb-4 outline-none focus:border-[#0891b2]/60"
         />
 
-        <label className="block text-xs text-[#70707f] mb-1">所属グループ</label>
-        <select
-          value={groupId}
-          onChange={(e) => setGroupId(e.target.value)}
-          className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60"
-        >
-          {groups.map((group) => (
-            <option key={group.id} value={group.id}>
-              {group.name}
-            </option>
-          ))}
-        </select>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs text-[#70707f] mb-1">事務所</label>
+            <select
+              value={officeId}
+              onChange={(e) => handleOfficeChange(e.target.value)}
+              className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60"
+            >
+              {offices.map((office) => (
+                <option key={office.id} value={office.id}>
+                  {office.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs text-[#70707f] mb-1">グループ</label>
+            <select
+              value={groupId}
+              onChange={(e) => handleGroupChange(e.target.value)}
+              className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60"
+            >
+              {groupsInOffice.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs text-[#70707f] mb-1">ユニット</label>
+            <select
+              value={unitId}
+              onChange={(e) => setUnitId(e.target.value)}
+              className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60"
+            >
+              {unitsInGroup.map((unit) => (
+                <option key={unit.id} value={unit.id}>
+                  {unit.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       <div className="rounded-2xl bg-white border border-[#e4e4ec] p-5 shadow-sm">
