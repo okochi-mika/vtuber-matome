@@ -29,6 +29,11 @@ export default async function HomePage() {
 
       return {
         talentId: talent.id,
+        // 【修正箇所】officeIdとgroupIdが抜けていたため、
+        // HomeTabs側で「どの事務所・グループに属するか」を判定できず、
+        // 常に絞り込みで弾かれてしまっていました
+        officeId: talent.officeId,
+        groupId: talent.groupId,
         unitId: talent.unitId,
         channelInfo,
       };
@@ -50,7 +55,7 @@ export default async function HomePage() {
             VTuberまとめ
           </h1>
           <p className="text-sm text-[#70707f] mt-1">
-            登録者数・動画数をまとめてチェック
+            登録者数・配信情報・動画数をまとめてチェック
           </p>
         </header>
 

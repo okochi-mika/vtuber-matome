@@ -14,6 +14,7 @@ export type ChannelInfo = {
   title: string;
   thumbnailUrl: string;
   subscriberCount: number;
+  liveCount: number;
   videoCount: number;
   viewCount: number;
 };

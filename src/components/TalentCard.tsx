@@ -43,8 +43,9 @@ export default function TalentCard({ channel }: TalentCardProps) {
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+      <div className="mt-5 grid grid-cols-4 gap-2 text-center">
         <StatBox label="登録者" value={formatNumber(channel.subscriberCount)} />
+        <StatBox label="配信数" value={formatNumber(channel.liveCount)} />
         <StatBox label="動画数" value={formatNumber(channel.videoCount)} />
         <StatBox label="総再生数" value={formatNumber(channel.viewCount)} />
       </div>

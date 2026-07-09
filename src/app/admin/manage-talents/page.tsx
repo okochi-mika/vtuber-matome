@@ -1,13 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import ManageTalentsForm from "@/components/ManageTalentsForm";
 import AddStructureForm from "@/components/AddStructureForm";
+import EditStructureList from "@/components/EditStructureList";
 
 export default async function ManageTalentsPage() {
   const talents = await prisma.talent.findMany({
-    include: {
-      unit: { include: { group: { include: { office: true } } } },
-      channels: true,
-    },
+    include: { channels: true },
     orderBy: { sortOrder: "asc" },
   });
 
@@ -19,21 +17,15 @@ export default async function ManageTalentsPage() {
     select: { id: true, name: true, officeId: true },
   });
 
-  const rawUnits = await prisma.unit.findMany({
-    include: { group: { include: { office: true } } },
+  const units = await prisma.unit.findMany({
+    select: { id: true, name: true, groupId: true },
   });
-
-  // タレント管理フォームのプルダウン用に「事務所 / グループ / ユニット」の
-  // ラベル文字列を作っておく（1つのプルダウンでどこに属すか分かりやすくするため）
-  const units = rawUnits.map((unit) => ({
-    id: unit.id,
-    name: unit.name,
-    groupLabel: `${unit.group.office.name} / ${unit.group.name} / ${unit.name}`,
-  }));
 
   const talentItems = talents.map((talent) => ({
     id: talent.id,
     name: talent.name,
+    officeId: talent.officeId,
+    groupId: talent.groupId,
     unitId: talent.unitId,
     channelId: talent.channels[0]?.externalId ?? "",
   }));
@@ -56,11 +48,13 @@ export default async function ManageTalentsPage() {
         <AddStructureForm
           initialOffices={offices}
           initialGroups={groups}
-          initialUnits={rawUnits.map((u) => ({
-            id: u.id,
-            name: u.name,
-            groupId: u.groupId,
-          }))}
+          initialUnits={units}
+        />
+
+        <EditStructureList
+          initialOffices={offices}
+          initialGroups={groups}
+          initialUnits={units}
         />
 
         {talentItems.length === 0 ? (
@@ -68,7 +62,12 @@ export default async function ManageTalentsPage() {
             まだタレントが登録されていません。
           </p>
         ) : (
-          <ManageTalentsForm initialTalents={talentItems} units={units} />
+          <ManageTalentsForm
+            initialTalents={talentItems}
+            offices={offices}
+            groups={groups}
+            units={units}
+          />
         )}
       </div>
     </main>

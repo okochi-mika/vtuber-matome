@@ -1,7 +1,7 @@
 // ============================================
 // API Route: /api/talents/[id]
-// PATCH  → 指定したタレントの情報を更新する（unitId対応版）
-// DELETE → 指定したタレントを削除する
+// PATCH  → タレント情報を更新する（groupId, unitIdは空にもできる）
+// DELETE → タレントを削除する
 // ============================================
 
 import { NextRequest, NextResponse } from "next/server";
@@ -14,14 +14,16 @@ type RouteParams = {
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const talentId = params.id;
   const body = await request.json();
-  const { name, unitId, channelId } = body;
+  const { name, officeId, groupId, unitId, channelId } = body;
 
   try {
     await prisma.talent.update({
       where: { id: talentId },
       data: {
         name,
-        unitId,
+        officeId,
+        groupId: groupId || null,
+        unitId: unitId || null,
       },
     });
 

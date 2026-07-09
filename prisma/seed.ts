@@ -1,7 +1,7 @@
 // ============================================
-// シードスクリプト（4階層版）
-// 事務所 → グループ → ユニット → タレント → チャンネル
-// という構造で初期データをDBに流し込みます
+// シードスクリプト
+// タレントは事務所(officeId)には必ず所属するが、
+// グループ・ユニットへの所属は任意、という構造に対応
 //
 // 実行方法（ターミナルで）:
 //   npx tsx prisma/seed.ts
@@ -12,78 +12,46 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  // ---------------------------------------------
-  // ステップ1: 事務所（Office）を作成
-  // ---------------------------------------------
   const hololive = await prisma.office.create({
-    data: {
-      name: "hololiveプロダクション",
-    },
+    data: { name: "hololiveプロダクション" },
   });
 
-  // ---------------------------------------------
-  // ステップ2: グループ（Group）を作成
-  // ---------------------------------------------
   const hololiveGroup = await prisma.group.create({
-    data: {
-      name: "ホロライブ",
-      officeId: hololive.id,
-    },
-  });
-
-  // ---------------------------------------------
-  // ステップ3: ユニット（Unit）を作成
-  // 特にユニットに属さないタレント用に「本体」という汎用ユニットも用意しておく
-  // ---------------------------------------------
-  const mainUnit = await prisma.unit.create({
-    data: {
-      name: "本体",
-      groupId: hololiveGroup.id,
-    },
+    data: { name: "ホロライブ", officeId: hololive.id },
   });
 
   const regloss = await prisma.unit.create({
-    data: {
-      name: "ReGLOSS",
-      groupId: hololiveGroup.id,
-    },
+    data: { name: "ReGLOSS", groupId: hololiveGroup.id },
   });
 
-  // ---------------------------------------------
-  // ステップ4: タレント（Talent）とチャンネル（Channel）を作成
-  // ---------------------------------------------
+  // 事務所直属（グループ・ユニット未所属）のタレントの例
   await prisma.talent.create({
     data: {
       name: "hololive公式",
-      unitId: mainUnit.id,
+      officeId: hololive.id,
       channels: {
         create: [
-          {
-            platform: "youtube",
-            externalId: "UCJFZiqLMntJufDCHc6bQixg",
-          },
+          { platform: "youtube", externalId: "UCJFZiqLMntJufDCHc6bQixg" },
         ],
       },
     },
   });
 
+  // グループ直属（ユニット未所属）のタレントの例
   await prisma.talent.create({
     data: {
       name: "星街すいせい",
-      unitId: mainUnit.id,
+      officeId: hololive.id,
+      groupId: hololiveGroup.id,
       channels: {
         create: [
-          {
-            platform: "youtube",
-            externalId: "UC5CwaMl1eIgY8h02uZw7u8A",
-          },
+          { platform: "youtube", externalId: "UC5CwaMl1eIgY8h02uZw7u8A" },
         ],
       },
     },
   });
 
   console.log("シードデータの登録が完了しました");
-  console.log("（ReGLOSSユニットは作成済みです。タレントは管理画面から追加してください）");
 }
 
 main()

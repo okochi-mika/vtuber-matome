@@ -13,6 +13,9 @@ type AddTalentFormProps = {
   units: Unit[];
 };
 
+// 「未所属」を表す特別な値（空文字はプルダウンの初期値と紛らわしいので専用の値を用意）
+const UNAFFILIATED = "";
+
 export default function AddTalentForm({
   offices,
   groups,
@@ -20,35 +23,30 @@ export default function AddTalentForm({
 }: AddTalentFormProps) {
   const [talentName, setTalentName] = useState("");
 
-  // 事務所 → グループ → ユニット の順に絞り込むための選択状態
   const [officeId, setOfficeId] = useState(offices[0]?.id ?? "");
   const groupsInOffice = groups.filter((g) => g.officeId === officeId);
 
-  const [groupId, setGroupId] = useState(groupsInOffice[0]?.id ?? "");
+  // グループ・ユニットは「未所属」を選べるように、初期値を空にしておく
+  const [groupId, setGroupId] = useState<string>(UNAFFILIATED);
   const unitsInGroup = units.filter((u) => u.groupId === groupId);
 
-  const [unitId, setUnitId] = useState(unitsInGroup[0]?.id ?? "");
+  const [unitId, setUnitId] = useState<string>(UNAFFILIATED);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<ChannelSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [message, setMessage] = useState("");
 
-  // 事務所を切り替えたら、グループ・ユニットの選択もその事務所内のものに更新する
   function handleOfficeChange(newOfficeId: string) {
     setOfficeId(newOfficeId);
-    const newGroups = groups.filter((g) => g.officeId === newOfficeId);
-    const newGroupId = newGroups[0]?.id ?? "";
-    setGroupId(newGroupId);
-    const newUnits = units.filter((u) => u.groupId === newGroupId);
-    setUnitId(newUnits[0]?.id ?? "");
+    setGroupId(UNAFFILIATED);
+    setUnitId(UNAFFILIATED);
   }
 
-  // グループを切り替えたら、ユニットの選択もそのグループ内のものに更新する
   function handleGroupChange(newGroupId: string) {
     setGroupId(newGroupId);
-    const newUnits = units.filter((u) => u.groupId === newGroupId);
-    setUnitId(newUnits[0]?.id ?? "");
+    // グループを変えたら、以前選んでいたユニットは無関係になるのでリセットする
+    setUnitId(UNAFFILIATED);
   }
 
   async function handleSearch() {
@@ -84,8 +82,8 @@ export default function AddTalentForm({
       setMessage("タレント名を入力してください");
       return;
     }
-    if (!unitId) {
-      setMessage("ユニットを選択してください（グループにユニットが無い場合は先に作成してください）");
+    if (!officeId) {
+      setMessage("事務所を選択してください");
       return;
     }
 
@@ -94,7 +92,9 @@ export default function AddTalentForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: talentName,
-        unitId,
+        officeId,
+        groupId: groupId || null,
+        unitId: unitId || null,
         channelId: channel.channelId,
       }),
     });
@@ -125,7 +125,9 @@ export default function AddTalentForm({
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs text-[#70707f] mb-1">事務所</label>
+            <label className="block text-xs text-[#70707f] mb-1">
+              事務所（必須）
+            </label>
             <select
               value={officeId}
               onChange={(e) => handleOfficeChange(e.target.value)}
@@ -140,12 +142,15 @@ export default function AddTalentForm({
           </div>
 
           <div>
-            <label className="block text-xs text-[#70707f] mb-1">グループ</label>
+            <label className="block text-xs text-[#70707f] mb-1">
+              グループ（任意）
+            </label>
             <select
               value={groupId}
               onChange={(e) => handleGroupChange(e.target.value)}
               className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60"
             >
+              <option value={UNAFFILIATED}>未所属</option>
               {groupsInOffice.map((group) => (
                 <option key={group.id} value={group.id}>
                   {group.name}
@@ -155,12 +160,16 @@ export default function AddTalentForm({
           </div>
 
           <div>
-            <label className="block text-xs text-[#70707f] mb-1">ユニット</label>
+            <label className="block text-xs text-[#70707f] mb-1">
+              ユニット（任意）
+            </label>
             <select
               value={unitId}
               onChange={(e) => setUnitId(e.target.value)}
-              className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60"
+              disabled={groupId === UNAFFILIATED}
+              className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60 disabled:opacity-50"
             >
+              <option value={UNAFFILIATED}>未所属</option>
               {unitsInGroup.map((unit) => (
                 <option key={unit.id} value={unit.id}>
                   {unit.name}

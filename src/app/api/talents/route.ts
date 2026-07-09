@@ -1,6 +1,7 @@
 // ============================================
 // API Route: /api/talents
-// POST → 新しいタレントを登録する（unitIdに所属させる形に変更）
+// POST → 新しいタレントを登録する
+// officeIdは必須、groupId・unitIdは任意（未所属の場合はnullのまま）
 // ============================================
 
 import { NextRequest, NextResponse } from "next/server";
@@ -8,11 +9,11 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { name, unitId, channelId } = body;
+  const { name, officeId, groupId, unitId, channelId } = body;
 
-  if (!name || !unitId || !channelId) {
+  if (!name || !officeId || !channelId) {
     return NextResponse.json(
-      { error: "name, unitId, channelId はすべて必須です" },
+      { error: "name, officeId, channelId は必須です" },
       { status: 400 }
     );
   }
@@ -21,7 +22,10 @@ export async function POST(request: NextRequest) {
     const talent = await prisma.talent.create({
       data: {
         name,
-        unitId,
+        officeId,
+        // groupId, unitIdが空文字("")で送られてくる場合はnull(未所属)として扱う
+        groupId: groupId || null,
+        unitId: unitId || null,
         channels: {
           create: [
             {

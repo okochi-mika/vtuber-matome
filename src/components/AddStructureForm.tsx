@@ -97,36 +97,15 @@ export default function AddStructureForm({
   function officeName(officeId: string) {
     return offices.find((o) => o.id === officeId)?.name ?? "?";
   }
-  function groupName(groupId: string) {
-    return groups.find((g) => g.id === groupId)?.name ?? "?";
-  }
 
   return (
     <div className="rounded-2xl bg-white border border-[#e4e4ec] p-5 shadow-sm space-y-6">
       <h2 className="text-[#14141c] font-semibold">
         事務所・グループ・ユニットの追加
       </h2>
-
-      {/* 現在の階層構造を一覧表示 */}
-      <div className="text-sm space-y-1 bg-[#f5f6fa] rounded-lg p-3">
-        {offices.map((office) => (
-          <div key={office.id}>
-            <span className="text-[#14141c] font-medium">{office.name}</span>
-            {groups
-              .filter((g) => g.officeId === office.id)
-              .map((group) => (
-                <div key={group.id} className="pl-4 text-[#70707f]">
-                  └ {group.name}
-                  {" : "}
-                  {units
-                    .filter((u) => u.groupId === group.id)
-                    .map((u) => u.name)
-                    .join("、") || "（ユニット未登録）"}
-                </div>
-              ))}
-          </div>
-        ))}
-      </div>
+      <p className="text-xs text-[#70707f] -mt-4">
+        既存の項目の編集・削除は下の「グループ・ユニットの編集」から行えます
+      </p>
 
       {/* 事務所を追加 */}
       <div className="border-t border-[#e4e4ec] pt-4">
@@ -138,7 +117,7 @@ export default function AddStructureForm({
             type="text"
             value={newOfficeName}
             onChange={(e) => setNewOfficeName(e.target.value)}
-            placeholder="例: にじさんじ"
+            placeholder="本体: ホロライブプロダクション"
             className="flex-1 rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60"
           />
           <button
@@ -171,7 +150,7 @@ export default function AddStructureForm({
             type="text"
             value={newGroupName}
             onChange={(e) => setNewGroupName(e.target.value)}
-            placeholder="例: ホロライブ"
+            placeholder="本体: ホロライブ"
             className="flex-1 rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60"
           />
           <button
@@ -204,7 +183,7 @@ export default function AddStructureForm({
             type="text"
             value={newUnitName}
             onChange={(e) => setNewUnitName(e.target.value)}
-            placeholder="例: 0期生"
+            placeholder="本体: 0期生"
             className="flex-1 rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60"
           />
           <button

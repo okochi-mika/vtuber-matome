@@ -1,10 +1,3 @@
-// ============================================
-// トップページ
-// 事務所タブ → グループタブ → タレント一覧、という2段階の絞り込みに対応
-// タブの切り替え自体はブラウザ側の操作なので、実際の表示は
-// クライアントコンポーネント（HomeTabs）に任せている
-// ============================================
-
 import { prisma } from "@/lib/prisma";
 import { getChannelInfo } from "@/lib/youtube";
 import HomeTabs from "@/components/HomeTabs";
@@ -18,13 +11,15 @@ export default async function HomePage() {
     select: { id: true, name: true, officeId: true },
   });
 
+  const units = await prisma.unit.findMany({
+    select: { id: true, name: true, groupId: true },
+  });
+
   const talents = await prisma.talent.findMany({
     include: { channels: true },
     orderBy: { sortOrder: "asc" },
   });
 
-  // 各タレントの最新のYouTube情報を取得しつつ、
-  // どのグループに属するかという情報も一緒に持たせておく
   const talentsWithChannelInfo = await Promise.all(
     talents.map(async (talent) => {
       const primaryChannel = talent.channels[0];
@@ -34,7 +29,9 @@ export default async function HomePage() {
 
       return {
         talentId: talent.id,
+        officeId: talent.officeId,
         groupId: talent.groupId,
+        unitId: talent.unitId,
         channelInfo,
       };
     })
@@ -55,11 +52,16 @@ export default async function HomePage() {
             VTuberまとめ
           </h1>
           <p className="text-sm text-[#70707f] mt-1">
-            登録者数・動画数をまとめてチェック
+            登録者数・配信情報・動画数をまとめてチェック
           </p>
         </header>
 
-        <HomeTabs offices={offices} groups={groups} talents={displayList} />
+        <HomeTabs
+          offices={offices}
+          groups={groups}
+          units={units}
+          talents={displayList}
+        />
       </div>
     </main>
   );

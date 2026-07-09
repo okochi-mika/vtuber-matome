@@ -34,8 +34,10 @@ model Office {
   name   String
 
   // groups: この事務所に所属するグループの一覧（1つの事務所に複数グループ）
-  // これは実際のカラムではなく、Group側とのつながりを表す「関連」です
   groups Group[]
+
+  // talents: グループに所属していない（事務所直属の）タレント一覧
+  talents Talent[]
 }
 
 // 【グループ】ホロライブ内の「ホロライブ」「hololive EN」など
@@ -51,11 +53,12 @@ model Group {
 
   // units: このグループに属するユニットの一覧
   units    Unit[]
+
+  // talents: ユニットに所属していない（グループ直属の）タレント一覧
+  talents  Talent[]
 }
 
 // 【ユニット】グループの中の「ReGLOSS」「秘密結社holoX」のような小グループ
-// 特にユニットに属さないタレントのために、
-// 「本体」のような汎用ユニットを1つ作っておく運用を想定しています
 model Unit {
   id      String   @id @default(cuid())
   name    String
@@ -69,6 +72,8 @@ model Unit {
 }
 
 // 【タレント】個々のVTuber本人
+// 事務所への所属は必須ですが、グループ・ユニットへの所属は任意です
+// （事務所直属のタレント、グループ直属でユニット未所属のタレントにも対応するため）
 model Talent {
   id       String    @id @default(cuid())
   name     String
@@ -76,12 +81,19 @@ model Talent {
   // sortOrder: トップページでの表示順。数字が小さいほど先に表示される
   sortOrder Int      @default(0)
 
-  // unitId: どのユニットに所属しているか（Unitのidを格納）
-  unitId   String
-  unit     Unit      @relation(fields: [unitId], references: [id])
+  // officeId: どの事務所に属しているか（これは必須）
+  officeId String
+  office   Office    @relation(fields: [officeId], references: [id])
+
+  // groupId: どのグループに属しているか（任意。"?"を付けると空(null)を許可できる）
+  groupId  String?
+  group    Group?    @relation(fields: [groupId], references: [id])
+
+  // unitId: どのユニットに属しているか（任意）
+  unitId   String?
+  unit     Unit?     @relation(fields: [unitId], references: [id])
 
   // channels: このタレントが持つチャンネル一覧
-  // （YouTubeだけでなく、将来的にX(Twitter)なども同じ形で追加できるようにしています）
   channels Channel[]
 }
 
