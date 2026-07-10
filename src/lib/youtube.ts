@@ -14,7 +14,6 @@ export type ChannelInfo = {
   title: string;
   thumbnailUrl: string;
   subscriberCount: number;
-  liveCount: number;
   videoCount: number;
   viewCount: number;
 };
@@ -56,9 +55,12 @@ export async function getChannelInfo(
     channelId,
     title: channelData.snippet.title,
     thumbnailUrl: channelData.snippet.thumbnails.default.url,
-    subscriberCount: Number(channelData.statistics.subscriberCount),
-    videoCount: Number(channelData.statistics.videoCount),
-    viewCount: Number(channelData.statistics.viewCount),
+    // 登録者数を非公開にしているチャンネルは statistics.subscriberCount が
+    // レスポンスに含まれないことがあるため、"?? 0" で無い場合は0として扱う
+    // （0だと「非公開」の意味で画面側に表示させる）
+    subscriberCount: Number(channelData.statistics.subscriberCount ?? 0),
+    videoCount: Number(channelData.statistics.videoCount ?? 0),
+    viewCount: Number(channelData.statistics.viewCount ?? 0),
   };
 }
 
@@ -97,7 +99,18 @@ export async function searchChannels(
   const data = await response.json();
 
   if (!data.items) {
-    return [];
+    // 【重要】以前はここで何も考えずに空配列を返していたため、
+    // クォータ超過などのエラーが起きていても画面上は「検索結果0件」にしか見えなかった
+    // → エラーの中身をログに出し、呼び出し元にも分かるようにエラーとして投げる
+    console.error("YouTube検索でエラーが発生しました:", data.error ?? data);
+
+    if (data.error?.errors?.[0]?.reason === "quotaExceeded") {
+      throw new Error(
+        "YouTube APIの1日の利用上限（クォータ）に達しました。日本時間で毎日17時頃にリセットされます。"
+      );
+    }
+
+    throw new Error("YouTube検索でエラーが発生しました");
   }
 
   // 検索結果を、画面で使いやすい形に整形する

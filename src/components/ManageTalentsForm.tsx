@@ -11,7 +11,7 @@ type TalentItem = {
   name: string;
   officeId: string;
   groupId: string | null;
-  unitId: string | null;
+  unitIds: string[]; // 【変更点】単一のunitIdから、配列に変更
   channelId: string;
 };
 
@@ -35,7 +35,7 @@ export default function ManageTalentsForm({
 
   function handleFieldChange(
     talentId: string,
-    field: "name" | "officeId" | "groupId" | "unitId" | "channelId",
+    field: "name" | "officeId" | "groupId" | "channelId",
     value: string
   ) {
     setTalents((prev) =>
@@ -47,14 +47,30 @@ export default function ManageTalentsForm({
         // 事務所を変えたら、グループ・ユニットの選択は一旦リセットする
         if (field === "officeId") {
           updated.groupId = null;
-          updated.unitId = null;
+          updated.unitIds = [];
         }
         // グループを変えたら、ユニットの選択はリセットする
         if (field === "groupId") {
-          updated.unitId = null;
+          updated.unitIds = [];
         }
 
         return updated;
+      })
+    );
+  }
+
+  // ユニットのチェックを1つ切り替える
+  function toggleUnit(talentId: string, unitId: string) {
+    setTalents((prev) =>
+      prev.map((t) => {
+        if (t.id !== talentId) return t;
+        const nowSelected = t.unitIds.includes(unitId);
+        return {
+          ...t,
+          unitIds: nowSelected
+            ? t.unitIds.filter((id) => id !== unitId)
+            : [...t.unitIds, unitId],
+        };
       })
     );
   }
@@ -70,7 +86,7 @@ export default function ManageTalentsForm({
         name: talent.name,
         officeId: talent.officeId,
         groupId: talent.groupId,
-        unitId: talent.unitId,
+        unitIds: talent.unitIds,
         channelId: talent.channelId,
       }),
     });
@@ -210,25 +226,45 @@ export default function ManageTalentsForm({
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-xs text-[#70707f] mb-1">
-                    ユニット（任意）
+                {/* 【変更点】ユニットはチェックボックスで複数選べるようにする */}
+                <div className="sm:col-span-2">
+                  <label className="block text-xs text-[#70707f] mb-2">
+                    ユニット（任意・複数選択可）
                   </label>
-                  <select
-                    value={talent.unitId ?? UNAFFILIATED}
-                    onChange={(e) =>
-                      handleFieldChange(talent.id, "unitId", e.target.value)
-                    }
-                    disabled={!talent.groupId}
-                    className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60 disabled:opacity-50"
-                  >
-                    <option value={UNAFFILIATED}>未所属</option>
-                    {unitsInGroup.map((unit) => (
-                      <option key={unit.id} value={unit.id}>
-                        {unit.name}
-                      </option>
-                    ))}
-                  </select>
+                  {!talent.groupId ? (
+                    <p className="text-xs text-[#70707f]">
+                      グループを選ぶとユニットを選択できます
+                    </p>
+                  ) : unitsInGroup.length === 0 ? (
+                    <p className="text-xs text-[#70707f]">
+                      このグループにはまだユニットが登録されていません
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {unitsInGroup.map((unit) => {
+                        const isSelected = talent.unitIds.includes(unit.id);
+                        return (
+                          <label
+                            key={unit.id}
+                            className={
+                              "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium cursor-pointer border transition-colors " +
+                              (isSelected
+                                ? "bg-[#0891b2] border-[#0891b2] text-white"
+                                : "bg-[#f5f6fa] border-[#e4e4ec] text-[#70707f] hover:border-[#0891b2]/50")
+                            }
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleUnit(talent.id, unit.id)}
+                              className="hidden"
+                            />
+                            {unit.name}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 <div className="sm:col-span-2">

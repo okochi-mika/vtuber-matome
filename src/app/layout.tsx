@@ -13,7 +13,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 // ブラウザのタブに表示されるタイトルや説明文
 export const metadata: Metadata = {
-  title: "VTuberまとめ",
+  title: "VTuber掲示板",
   description: "VTuberの登録者数・動画数をまとめてチェックできるアプリ",
 };
 

@@ -1,6 +1,6 @@
 // ============================================
 // API Route: /api/talents/[id]
-// PATCH  → タレント情報を更新する（groupId, unitIdは空にもできる）
+// PATCH  → タレント情報を更新する（groupIdは空にできる、unitIdsは複数指定・総入れ替え）
 // DELETE → タレントを削除する
 // ============================================
 
@@ -14,7 +14,7 @@ type RouteParams = {
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const talentId = params.id;
   const body = await request.json();
-  const { name, officeId, groupId, unitId, channelId } = body;
+  const { name, officeId, groupId, unitIds, channelId } = body;
 
   try {
     await prisma.talent.update({
@@ -23,7 +23,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         name,
         officeId,
         groupId: groupId || null,
-        unitId: unitId || null,
+        // units: set → 今まで所属していたユニットを一旦全部外し、
+        // 新しく渡された配列の内容に丸ごと入れ替える
+        // （個別にconnect/disconnectするより、画面側のチェック状態と
+        //   常に一致させやすいのでこちらを採用）
+        units: {
+          set: ((unitIds ?? []) as string[]).map((id) => ({ id })),
+        },
       },
     });
 

@@ -16,7 +16,10 @@ export default async function HomePage() {
   });
 
   const talents = await prisma.talent.findMany({
-    include: { channels: true },
+    include: {
+      channels: true,
+      units: { select: { id: true } }, // 複数所属しているユニットのID一覧
+    },
     orderBy: { sortOrder: "asc" },
   });
 
@@ -29,12 +32,9 @@ export default async function HomePage() {
 
       return {
         talentId: talent.id,
-        // 【修正箇所】officeIdとgroupIdが抜けていたため、
-        // HomeTabs側で「どの事務所・グループに属するか」を判定できず、
-        // 常に絞り込みで弾かれてしまっていました
         officeId: talent.officeId,
         groupId: talent.groupId,
-        unitId: talent.unitId,
+        unitIds: talent.units.map((u) => u.id),
         channelInfo,
       };
     })
@@ -46,7 +46,7 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#f5f6fa] px-6 py-10">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <header className="mb-8">
           <p className="text-xs tracking-widest text-[#0891b2] font-mono uppercase">
             Live Stats

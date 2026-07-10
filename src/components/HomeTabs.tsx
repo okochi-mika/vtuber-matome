@@ -12,7 +12,7 @@ type TalentDisplayItem = {
   talentId: string;
   officeId: string;
   groupId: string | null;
-  unitId: string | null;
+  unitIds: string[]; // 【変更点】単一のunitIdから、所属ユニットの配列に変更
   channelInfo: ChannelInfo;
 };
 
@@ -25,7 +25,6 @@ type HomeTabsProps = {
 
 // タブの選択状態を表す特別な値
 const ALL = "__all__"; // 「すべて」タブ
-const UNAFFILIATED = "__unaffiliated__"; // 「未所属」タブ
 
 export default function HomeTabs({
   offices,
@@ -39,18 +38,8 @@ export default function HomeTabs({
 
   const groupsInOffice = groups.filter((g) => g.officeId === activeOfficeId);
 
-  // この事務所に「グループ未所属」のタレントが1人でもいるかどうか
-  const hasUnaffiliatedInOffice = talents.some(
-    (t) => t.officeId === activeOfficeId && !t.groupId
-  );
-
   // グループタブで選択中のグループに属するユニット一覧
   const unitsInGroup = units.filter((u) => u.groupId === activeGroupId);
-
-  // 選択中のグループに「ユニット未所属」のタレントが1人でもいるかどうか
-  const hasUnaffiliatedInGroup = talents.some(
-    (t) => t.groupId === activeGroupId && !t.unitId
-  );
 
   // ---------------------------------------------
   // 表示するタレントの絞り込み
@@ -59,19 +48,18 @@ export default function HomeTabs({
     if (talent.officeId !== activeOfficeId) return false;
 
     if (activeGroupId === ALL) {
-      // グループ「すべて」: この事務所のタレント全員（グループ有無問わず）
+      // グループ「すべて」: この事務所のタレント全員
+      // （グループに所属していないタレントもここに含まれる）
       return true;
-    }
-    if (activeGroupId === UNAFFILIATED) {
-      // グループ「未所属」: グループを持たないタレントだけ
-      return !talent.groupId;
     }
     // 特定のグループが選ばれている場合
     if (talent.groupId !== activeGroupId) return false;
 
     if (activeUnitId === ALL) return true;
-    if (activeUnitId === UNAFFILIATED) return !talent.unitId;
-    return talent.unitId === activeUnitId;
+    // 【重要】このタレントが「選択中のユニット」を含んでいるかどうかで判定する
+    // → 複数のユニットに所属していても、タレント本体は1件しか無いので、
+    //    同じ人が重複して表示されることはない
+    return talent.unitIds.includes(activeUnitId);
   });
 
   function handleOfficeChange(officeId: string) {
@@ -105,50 +93,39 @@ export default function HomeTabs({
         ))}
       </div>
 
-      {/* グループタブ */}
-      <div className="flex flex-wrap gap-2 mb-3">
-        <button
-          onClick={() => handleGroupChange(ALL)}
-          className={
-            "px-3 py-1.5 rounded-full text-xs font-semibold transition-colors " +
-            (activeGroupId === ALL
-              ? "bg-[#0891b2] text-white"
-              : "bg-white border border-[#e4e4ec] text-[#70707f] hover:border-[#0891b2]/50")
-          }
-        >
-          すべて
-        </button>
-        {groupsInOffice.map((group) => (
+      {/* グループタブ（この事務所にグループが1件も無い場合は表示しない） */}
+      {groupsInOffice.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
           <button
-            key={group.id}
-            onClick={() => handleGroupChange(group.id)}
+            onClick={() => handleGroupChange(ALL)}
             className={
               "px-3 py-1.5 rounded-full text-xs font-semibold transition-colors " +
-              (activeGroupId === group.id
+              (activeGroupId === ALL
                 ? "bg-[#0891b2] text-white"
                 : "bg-white border border-[#e4e4ec] text-[#70707f] hover:border-[#0891b2]/50")
             }
           >
-            {group.name}
+            すべて
           </button>
-        ))}
-        {hasUnaffiliatedInOffice && (
-          <button
-            onClick={() => handleGroupChange(UNAFFILIATED)}
-            className={
-              "px-3 py-1.5 rounded-full text-xs font-semibold transition-colors " +
-              (activeGroupId === UNAFFILIATED
-                ? "bg-[#0891b2] text-white"
-                : "bg-white border border-dashed border-[#e4e4ec] text-[#70707f] hover:border-[#0891b2]/50")
-            }
-          >
-            未所属
-          </button>
-        )}
-      </div>
+          {groupsInOffice.map((group) => (
+            <button
+              key={group.id}
+              onClick={() => handleGroupChange(group.id)}
+              className={
+                "px-3 py-1.5 rounded-full text-xs font-semibold transition-colors " +
+                (activeGroupId === group.id
+                  ? "bg-[#0891b2] text-white"
+                  : "bg-white border border-[#e4e4ec] text-[#70707f] hover:border-[#0891b2]/50")
+              }
+            >
+              {group.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ユニットタブ（具体的なグループが選ばれている時だけ表示） */}
-      {activeGroupId !== ALL && activeGroupId !== UNAFFILIATED && (
+      {activeGroupId !== ALL && (
         <div className="flex flex-wrap gap-2 mb-6">
           <button
             onClick={() => setActiveUnitId(ALL)}
@@ -175,24 +152,11 @@ export default function HomeTabs({
               {unit.name}
             </button>
           ))}
-          {hasUnaffiliatedInGroup && (
-            <button
-              onClick={() => setActiveUnitId(UNAFFILIATED)}
-              className={
-                "px-3 py-1 rounded-full text-xs font-medium transition-colors " +
-                (activeUnitId === UNAFFILIATED
-                  ? "bg-[#ec4899] text-white"
-                  : "bg-white border border-dashed border-[#e4e4ec] text-[#70707f] hover:border-[#ec4899]/50")
-              }
-            >
-              未所属
-            </button>
-          )}
         </div>
       )}
 
       {/* タレント一覧 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredTalents.map((item) => (
           <TalentCard key={item.talentId} channel={item.channelInfo} />
         ))}

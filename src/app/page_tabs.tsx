@@ -49,7 +49,7 @@ export default async function HomePage() {
             Live Stats
           </p>
           <h1 className="text-3xl font-bold text-[#14141c] mt-1">
-            VTuberまとめ
+            VTuber掲示板
           </h1>
           <p className="text-sm text-[#70707f] mt-1">
             登録者数・配信情報・動画数をまとめてチェック

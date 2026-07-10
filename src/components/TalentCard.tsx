@@ -1,6 +1,11 @@
 import type { ChannelInfo } from "@/lib/youtube";
 
-function formatNumber(num: number): string {
+// num が数値でない場合や0の場合でも安全に表示できるようにする
+// （登録者数を非公開にしているチャンネルは0として扱われるため）
+function formatNumber(num: number | undefined): string {
+  if (typeof num !== "number" || Number.isNaN(num) || num === 0) {
+    return "非公開";
+  }
   return num.toLocaleString("ja-JP");
 }
 
@@ -43,9 +48,8 @@ export default function TalentCard({ channel }: TalentCardProps) {
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-4 gap-2 text-center">
+      <div className="mt-5 grid grid-cols-3 gap-2 text-center">
         <StatBox label="登録者" value={formatNumber(channel.subscriberCount)} />
-        <StatBox label="配信数" value={formatNumber(channel.liveCount)} />
         <StatBox label="動画数" value={formatNumber(channel.videoCount)} />
         <StatBox label="総再生数" value={formatNumber(channel.viewCount)} />
       </div>
@@ -54,9 +58,24 @@ export default function TalentCard({ channel }: TalentCardProps) {
 }
 
 function StatBox({ label, value }: { label: string; value: string }) {
+  // 桁数（カンマ含む文字数）に応じてフォントサイズを段階的に小さくする
+  // → truncate（...で省略）せずに、枠の中へ数字全体を収める
+  const length = value.length;
+  const sizeClass =
+    length <= 9
+      ? "text-sm sm:text-base"
+      : length <= 12
+      ? "text-xs sm:text-sm"
+      : "text-[10px] sm:text-xs";
+
   return (
     <div className="rounded-lg bg-[#f5f6fa] py-2.5 px-1">
-      <p className="font-mono text-sm sm:text-base text-[#0891b2] tabular-nums truncate">
+      <p
+        className={
+          "font-mono text-[#0891b2] tabular-nums whitespace-nowrap " +
+          sizeClass
+        }
+      >
         {value}
       </p>
       <p className="text-[10px] text-[#70707f] mt-1">{label}</p>

@@ -67,7 +67,7 @@ model Unit {
   groupId String
   group   Group    @relation(fields: [groupId], references: [id])
 
-  // talents: このユニットに所属するタレント一覧
+  // talents: このユニットに所属するタレント一覧（複数ユニット対応）
   talents Talent[]
 }
 
@@ -89,9 +89,8 @@ model Talent {
   groupId  String?
   group    Group?    @relation(fields: [groupId], references: [id])
 
-  // unitId: どのユニットに属しているか（任意）
-  unitId   String?
-  unit     Unit?     @relation(fields: [unitId], references: [id])
+  // units: 所属するユニット一覧（複数のユニットに同時に所属できる）
+  units    Unit[]
 
   // channels: このタレントが持つチャンネル一覧
   channels Channel[]
