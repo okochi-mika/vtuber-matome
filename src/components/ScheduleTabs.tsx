@@ -39,21 +39,6 @@ export default function ScheduleTabs({ offices, videos }: ScheduleTabsProps) {
 
   return (
     <div>
-      {/* 【一時的なデバッグ表示】原因調査が終わったら削除します */}
-      <div className="mb-6 p-3 rounded-lg bg-yellow-50 border border-yellow-300 text-xs font-mono overflow-x-auto">
-        <p>選択中のofficeId: {activeOfficeId}</p>
-        <p className="mt-1">事務所一覧:</p>
-        {offices.map((o) => (
-          <p key={o.id}>　{o.name}: {o.id}</p>
-        ))}
-        <p className="mt-2">動画ごとのofficeId（配信中・配信予定の全件）:</p>
-        {videos.map((v) => (
-          <p key={v.id}>
-            　[{v.status}] {v.talentName ?? v.channel?.name ?? "?"} → officeId: {v.officeId ?? "(undefined)"}
-          </p>
-        ))}
-      </div>
-
       {/* 事務所タブ */}
       <div className="flex flex-wrap gap-2 mb-8">
         <button

@@ -84,7 +84,22 @@ export async function getLiveAndUpcoming(
     })
   );
 
-  return results.flat();
+  const flatResults = results.flat();
+
+  // 【重要】同じ動画(id)が複数回返ってくることがあるため、動画IDで重複を除去する
+  // （合同企画の配信などで、Holodex側が複数のチャンネルに紐づけて
+  //   同じ動画を返してくることがあるため。1回目に見つかったものを優先する）
+  const seenIds = new Set<string>();
+  const dedupedResults: HolodexVideo[] = [];
+
+  for (const video of flatResults) {
+    if (!seenIds.has(video.id)) {
+      seenIds.add(video.id);
+      dedupedResults.push(video);
+    }
+  }
+
+  return dedupedResults;
 }
 
 // YouTubeの動画IDから、サムネイル画像のURLを組み立てる
