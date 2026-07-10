@@ -14,7 +14,7 @@ export type HolodexVideo = {
   start_scheduled?: string; // 配信予定時刻(ISO8601形式の文字列)
   start_actual?: string; // 実際に配信が始まった時刻
   live_viewers?: number; // 現在の視聴者数（配信中のみ）
-  channel_id: string; // YouTubeチャンネルID
+  channel_id?: string; // YouTubeチャンネルID（includeパラメータの指定によっては入らないことがある）
   // 【追加】Holodex側が持っているチャンネル名の情報
   // こちらのDBに登録が無いチャンネル（コラボ相手など）でも、
   // 名前だけは表示できるようにするために使う
@@ -23,6 +23,19 @@ export type HolodexVideo = {
     name: string;
   };
 };
+
+// ============================================
+// 動画がどのチャンネルのものかを取得するヘルパー関数
+//
+// 【重要】Holodex APIは、リクエスト時のパラメータ（今回は&include=channel）
+// によって、チャンネルIDの入る場所が変わります。
+// - トップレベルの channel_id に入っている場合
+// - channel.id （入れ子）に入っている場合
+// の両方に対応できるよう、このヘルパーを介して取得するようにしています。
+// ============================================
+export function getChannelIdFromVideo(video: HolodexVideo): string | undefined {
+  return video.channel_id ?? video.channel?.id;
+}
 
 // 複数のチャンネルIDを渡すと、その中で「配信中」または「配信予定」の
 // 動画をまとめて返す（Holodexの「複数チャンネルの状態を一括で調べる」専用API）

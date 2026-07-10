@@ -146,6 +146,7 @@ export type VideoInfo = {
   publishedAt: string;
   viewCount: number;
   isArchive: boolean; // 配信のアーカイブなら true、通常のアップロード動画なら false
+  isLiveNow: boolean; // 今まさに配信中なら true
 };
 
 export type TalentVideos = {
@@ -198,21 +199,31 @@ export async function getChannelVideos(
     `&key=${apiKey}`;
 
   const videosResponse = await fetch(videosUrl, {
-    next: { revalidate: 600 },
+    // 【変更点】配信中かどうかの判定にも使うため、キャッシュ時間を10分→2分に短縮
+    // （動画一覧そのものはそこまで頻繁に変わらないが、「今まさに配信中か」は
+    //  なるべく新しい情報にしたいため）
+    next: { revalidate: 120 },
   });
   const videosData = await videosResponse.json();
 
-  const videos: VideoInfo[] = (videosData.items ?? []).map((item: any) => ({
-    videoId: item.id,
-    title: item.snippet.title,
-    thumbnailUrl:
-      item.snippet.thumbnails?.medium?.url ??
-      item.snippet.thumbnails?.default?.url,
-    publishedAt: item.snippet.publishedAt,
-    viewCount: Number(item.statistics?.viewCount ?? 0),
-    // liveStreamingDetails が存在する動画 = 配信アーカイブ
-    isArchive: Boolean(item.liveStreamingDetails),
-  }));
+  const videos: VideoInfo[] = (videosData.items ?? []).map((item: any) => {
+    const liveDetails = item.liveStreamingDetails;
+
+    return {
+      videoId: item.id,
+      title: item.snippet.title,
+      thumbnailUrl:
+        item.snippet.thumbnails?.medium?.url ??
+        item.snippet.thumbnails?.default?.url,
+      publishedAt: item.snippet.publishedAt,
+      viewCount: Number(item.statistics?.viewCount ?? 0),
+      // liveStreamingDetails が存在する動画 = 配信アーカイブ
+      isArchive: Boolean(liveDetails),
+      // 【判定方法】配信が「始まった記録」はあるが「終わった記録」がまだ無い
+      // → 今まさに配信中、ということになる
+      isLiveNow: Boolean(liveDetails?.actualStartTime) && !liveDetails?.actualEndTime,
+    };
+  });
 
   // 最新順（プレイリスト自体がすでに新しい順になっているので並べ替え不要）
   const latest = videos;
