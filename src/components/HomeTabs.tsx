@@ -158,7 +158,7 @@ export default function HomeTabs({
       {/* タレント一覧 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredTalents.map((item) => (
-          <TalentCard key={item.talentId} channel={item.channelInfo} />
+          <TalentCard key={item.talentId} talentId={item.talentId} channel={item.channelInfo} />
         ))}
       </div>
 

@@ -120,3 +120,105 @@ export async function searchChannels(
     thumbnailUrl: item.snippet.thumbnails.default.url,
   }));
 }
+
+// ============================================
+// ここから追加: タレント個別ページ用の「動画一覧」取得機能
+//
+// 【クォータ消費を抑える工夫】
+// 動画一覧の取得には本来 search.list（1回100ユニット）を使いがちですが、
+// 代わりに以下の2ステップで済ませることで、1ページあたり2ユニット程度に抑えています。
+//
+// 1. playlistItems.list（1ユニット）
+//    → チャンネルの「アップロード動画一覧プレイリスト」から、
+//      最新の動画IDを一括取得する
+//      （YouTubeの仕様上、チャンネルID の "UC" を "UU" に置き換えると
+//       そのチャンネルの「全アップロード動画」のプレイリストIDになる）
+//
+// 2. videos.list（1ユニット。動画を50件まとめて指定してもユニット消費は変わらない）
+//    → 上記で取得した動画IDを一括で渡し、再生回数や
+//      「配信アーカイブかどうか」の情報をまとめて取得する
+// ============================================
+
+export type VideoInfo = {
+  videoId: string;
+  title: string;
+  thumbnailUrl: string;
+  publishedAt: string;
+  viewCount: number;
+  isArchive: boolean; // 配信のアーカイブなら true、通常のアップロード動画なら false
+};
+
+export type TalentVideos = {
+  latest: VideoInfo[]; // 新しい順
+  popular: VideoInfo[]; // 再生回数が多い順
+};
+
+export async function getChannelVideos(
+  channelId: string,
+  maxResults: number = 12
+): Promise<TalentVideos> {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("YOUTUBE_API_KEY が設定されていません（.envを確認してください）");
+  }
+
+  // ステップ1: アップロード動画一覧プレイリストのIDを組み立てる
+  const uploadsPlaylistId = channelId.replace(/^UC/, "UU");
+
+  const playlistUrl =
+    `https://www.googleapis.com/youtube/v3/playlistItems` +
+    `?part=snippet` +
+    `&playlistId=${uploadsPlaylistId}` +
+    `&maxResults=${maxResults}` +
+    `&key=${apiKey}`;
+
+  const playlistResponse = await fetch(playlistUrl, {
+    next: { revalidate: 600 }, // 10分キャッシュ
+  });
+  const playlistData = await playlistResponse.json();
+
+  if (!playlistData.items || playlistData.items.length === 0) {
+    return { latest: [], popular: [] };
+  }
+
+  const videoIds = playlistData.items
+    .map((item: any) => item.snippet?.resourceId?.videoId)
+    .filter(Boolean);
+
+  if (videoIds.length === 0) {
+    return { latest: [], popular: [] };
+  }
+
+  // ステップ2: 動画IDをまとめて渡し、再生回数などの詳細を取得する
+  const videosUrl =
+    `https://www.googleapis.com/youtube/v3/videos` +
+    `?part=snippet,statistics,liveStreamingDetails` +
+    `&id=${videoIds.join(",")}` +
+    `&key=${apiKey}`;
+
+  const videosResponse = await fetch(videosUrl, {
+    next: { revalidate: 600 },
+  });
+  const videosData = await videosResponse.json();
+
+  const videos: VideoInfo[] = (videosData.items ?? []).map((item: any) => ({
+    videoId: item.id,
+    title: item.snippet.title,
+    thumbnailUrl:
+      item.snippet.thumbnails?.medium?.url ??
+      item.snippet.thumbnails?.default?.url,
+    publishedAt: item.snippet.publishedAt,
+    viewCount: Number(item.statistics?.viewCount ?? 0),
+    // liveStreamingDetails が存在する動画 = 配信アーカイブ
+    isArchive: Boolean(item.liveStreamingDetails),
+  }));
+
+  // 最新順（プレイリスト自体がすでに新しい順になっているので並べ替え不要）
+  const latest = videos;
+
+  // 再生回数順に並べ替えたものを「人気」として使う
+  const popular = [...videos].sort((a, b) => b.viewCount - a.viewCount);
+
+  return { latest, popular };
+}

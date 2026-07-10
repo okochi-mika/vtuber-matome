@@ -94,6 +94,19 @@ model Talent {
 
   // channels: このタレントが持つチャンネル一覧
   channels Channel[]
+
+  // ---------------------------------------------
+  // ここから個別ページ用のプロフィール情報
+  // YouTube APIからは取得できない項目なので、管理画面から手入力する
+  // ---------------------------------------------
+
+  // 各SNSのURL（無ければ空欄のままでOK）
+  twitterUrl   String?
+  instagramUrl String?
+  tiktokUrl    String?
+
+  // hashtag: 配信・切り抜き用のハッシュタグ（例: "#すいちゃんの証"）
+  hashtag      String?
 }
 
 // 【チャンネル】YouTubeチャンネルやX(Twitter)アカウントなど、外部サービスとの連携情報

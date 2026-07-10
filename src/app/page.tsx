@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getChannelInfo } from "@/lib/youtube";
 import HomeTabs from "@/components/HomeTabs";
+import Link from "next/link";
 
 export default async function HomePage() {
   const offices = await prisma.office.findMany({
@@ -47,16 +48,24 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen bg-[#f5f6fa] px-6 py-10">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-8">
-          <p className="text-xs tracking-widest text-[#0891b2] font-mono uppercase">
-            Live Stats
-          </p>
-          <h1 className="text-3xl font-bold text-[#14141c] mt-1">
-            VTuberまとめ
-          </h1>
-          <p className="text-sm text-[#70707f] mt-1">
-            登録者数・配信情報・動画数をまとめてチェック
-          </p>
+        <header className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs tracking-widest text-[#0891b2] font-mono uppercase">
+              Live Stats
+            </p>
+            <h1 className="text-3xl font-bold text-[#14141c] mt-1">
+              VTuberまとめ
+            </h1>
+            <p className="text-sm text-[#70707f] mt-1">
+              登録者数・配信情報・動画数をまとめてチェック
+            </p>
+          </div>
+          <Link
+            href="/schedule"
+            className="shrink-0 rounded-lg bg-white border border-[#e4e4ec] text-[#0891b2] text-sm font-semibold px-4 py-2 hover:border-[#0891b2]/60 whitespace-nowrap"
+          >
+            配信スケジュール
+          </Link>
         </header>
 
         <HomeTabs

@@ -13,6 +13,10 @@ type TalentItem = {
   groupId: string | null;
   unitIds: string[]; // 【変更点】単一のunitIdから、配列に変更
   channelId: string;
+  twitterUrl: string | null;
+  instagramUrl: string | null;
+  tiktokUrl: string | null;
+  hashtag: string | null;
 };
 
 type ManageTalentsFormProps = {
@@ -32,10 +36,32 @@ export default function ManageTalentsForm({
 }: ManageTalentsFormProps) {
   const [talents, setTalents] = useState<TalentItem[]>(initialTalents);
   const [messages, setMessages] = useState<Record<string, string>>({});
+  // どのタレントの「プロフィール編集」欄を開いているかを管理する
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  function toggleExpanded(talentId: string) {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(talentId)) {
+        next.delete(talentId);
+      } else {
+        next.add(talentId);
+      }
+      return next;
+    });
+  }
 
   function handleFieldChange(
     talentId: string,
-    field: "name" | "officeId" | "groupId" | "channelId",
+    field:
+      | "name"
+      | "officeId"
+      | "groupId"
+      | "channelId"
+      | "twitterUrl"
+      | "instagramUrl"
+      | "tiktokUrl"
+      | "hashtag",
     value: string
   ) {
     setTalents((prev) =>
@@ -88,13 +114,24 @@ export default function ManageTalentsForm({
         groupId: talent.groupId,
         unitIds: talent.unitIds,
         channelId: talent.channelId,
+        twitterUrl: talent.twitterUrl,
+        instagramUrl: talent.instagramUrl,
+        tiktokUrl: talent.tiktokUrl,
+        hashtag: talent.hashtag,
       }),
     });
 
-    setMessages((prev) => ({
-      ...prev,
-      [talentId]: response.ok ? "保存しました" : "保存に失敗しました",
-    }));
+    if (response.ok) {
+      setMessages((prev) => ({ ...prev, [talentId]: "保存しました" }));
+    } else {
+      // 【変更点】サーバーから返ってきた詳しいエラー内容を画面に表示する
+      const data = await response.json().catch(() => null);
+      const detail = data?.detail ?? data?.error ?? "原因不明のエラー";
+      setMessages((prev) => ({
+        ...prev,
+        [talentId]: `保存に失敗しました: ${detail}`,
+      }));
+    }
   }
 
   async function handleDelete(talentId: string, talentName: string) {
@@ -279,6 +316,81 @@ export default function ManageTalentsForm({
                     }
                     className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60 font-mono text-sm"
                   />
+                </div>
+
+                {/* 個別ページ用プロフィールの開閉式編集欄 */}
+                <div className="sm:col-span-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleExpanded(talent.id)}
+                    className="text-xs text-[#0891b2] font-semibold hover:underline"
+                  >
+                    {expandedIds.has(talent.id) ? "▲ " : "▼ "}
+                    プロフィール編集（挨拶文・SNSリンク）
+                  </button>
+
+                  {expandedIds.has(talent.id) && (
+                    <div className="mt-3 space-y-3 rounded-lg bg-[#f5f6fa] p-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-[#70707f] mb-1">
+                            X (Twitter) URL
+                          </label>
+                          <input
+                            type="text"
+                            value={talent.twitterUrl ?? ""}
+                            onChange={(e) =>
+                              handleFieldChange(talent.id, "twitterUrl", e.target.value)
+                            }
+                            placeholder="https://x.com/..."
+                            className="w-full rounded-lg bg-white border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-[#70707f] mb-1">
+                            Instagram URL
+                          </label>
+                          <input
+                            type="text"
+                            value={talent.instagramUrl ?? ""}
+                            onChange={(e) =>
+                              handleFieldChange(talent.id, "instagramUrl", e.target.value)
+                            }
+                            placeholder="https://instagram.com/..."
+                            className="w-full rounded-lg bg-white border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-[#70707f] mb-1">
+                            TikTok URL
+                          </label>
+                          <input
+                            type="text"
+                            value={talent.tiktokUrl ?? ""}
+                            onChange={(e) =>
+                              handleFieldChange(talent.id, "tiktokUrl", e.target.value)
+                            }
+                            placeholder="https://tiktok.com/@..."
+                            className="w-full rounded-lg bg-white border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-[#70707f] mb-1">
+                            ハッシュタグ
+                          </label>
+                          <input
+                            type="text"
+                            value={talent.hashtag ?? ""}
+                            onChange={(e) =>
+                              handleFieldChange(talent.id, "hashtag", e.target.value)
+                            }
+                            placeholder="例: #すいちゃんの証"
+                            className="w-full rounded-lg bg-white border border-[#e4e4ec] text-[#14141c] px-3 py-2 outline-none focus:border-[#0891b2]/60 text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

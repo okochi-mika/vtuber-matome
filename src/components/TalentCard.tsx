@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ChannelInfo } from "@/lib/youtube";
 
 // num が数値でない場合や0の場合でも安全に表示できるようにする
@@ -10,14 +11,16 @@ function formatNumber(num: number | undefined): string {
 }
 
 type TalentCardProps = {
+  talentId: string; // クリック時に個別ページ(/talent/[id])へ飛ばすために必要
   channel: ChannelInfo;
 };
 
-export default function TalentCard({ channel }: TalentCardProps) {
+export default function TalentCard({ talentId, channel }: TalentCardProps) {
   return (
-    <div
+    <Link
+      href={`/talent/${talentId}`}
       className="
-        group relative overflow-hidden rounded-2xl
+        group relative overflow-hidden rounded-2xl block
         bg-white border border-[#e4e4ec]
         p-5 shadow-sm transition-all duration-300
         hover:border-[#0891b2]/50 hover:shadow-md
@@ -53,7 +56,7 @@ export default function TalentCard({ channel }: TalentCardProps) {
         <StatBox label="動画数" value={formatNumber(channel.videoCount)} />
         <StatBox label="総再生数" value={formatNumber(channel.viewCount)} />
       </div>
-    </div>
+    </Link>
   );
 }
 

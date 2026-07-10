@@ -14,7 +14,17 @@ type RouteParams = {
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const talentId = params.id;
   const body = await request.json();
-  const { name, officeId, groupId, unitIds, channelId } = body;
+  const {
+    name,
+    officeId,
+    groupId,
+    unitIds,
+    channelId,
+    twitterUrl,
+    instagramUrl,
+    tiktokUrl,
+    hashtag,
+  } = body;
 
   try {
     await prisma.talent.update({
@@ -30,6 +40,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         units: {
           set: ((unitIds ?? []) as string[]).map((id) => ({ id })),
         },
+        // プロフィール項目（空文字で送られてきたらnullとして保存する）
+        twitterUrl: twitterUrl || null,
+        instagramUrl: instagramUrl || null,
+        tiktokUrl: tiktokUrl || null,
+        hashtag: hashtag || null,
       },
     });
 
@@ -58,10 +73,16 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error("タレント更新中にエラーが発生しました:", error);
+    // 【変更点】原因調査をしやすくするため、エラーの詳細（Prismaのエラーコードなど）を
+    // そのまま画面側にも返すようにする
     return NextResponse.json(
-      { error: "タレント更新中にエラーが発生しました" },
+      {
+        error: "タレント更新中にエラーが発生しました",
+        detail: error?.message ?? String(error),
+        code: error?.code ?? null,
+      },
       { status: 500 }
     );
   }

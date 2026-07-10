@@ -32,6 +32,10 @@ export default async function ManageTalentsPage() {
     groupId: talent.groupId,
     unitIds: talent.units.map((u) => u.id),
     channelId: talent.channels[0]?.externalId ?? "",
+    twitterUrl: talent.twitterUrl,
+    instagramUrl: talent.instagramUrl,
+    tiktokUrl: talent.tiktokUrl,
+    hashtag: talent.hashtag,
   }));
 
   return (
