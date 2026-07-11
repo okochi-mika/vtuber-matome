@@ -39,12 +39,12 @@ export default function ScheduleTabs({ offices, videos }: ScheduleTabsProps) {
 
   return (
     <div>
-      {/* 事務所タブ */}
+      {/* 事務所タブ（手書きチョーク風フォント） */}
       <div className="flex flex-wrap gap-2 mb-8">
         <button
           onClick={() => setActiveOfficeId(ALL)}
           className={
-            "px-4 py-2 rounded-full text-sm font-semibold transition-colors " +
+            "font-handwriting px-4 py-2 rounded-full text-base font-semibold transition-colors " +
             (activeOfficeId === ALL
               ? "bg-[#0891b2] text-white"
               : "bg-white/10 border border-white/25 text-white/70 hover:border-[#0891b2]/60 hover:text-white")
@@ -57,7 +57,7 @@ export default function ScheduleTabs({ offices, videos }: ScheduleTabsProps) {
             key={office.id}
             onClick={() => setActiveOfficeId(office.id)}
             className={
-              "px-4 py-2 rounded-full text-sm font-semibold transition-colors " +
+              "font-handwriting px-4 py-2 rounded-full text-base font-semibold transition-colors " +
               (activeOfficeId === office.id
                 ? "bg-[#0891b2] text-white"
                 : "bg-white/10 border border-white/25 text-white/70 hover:border-[#0891b2]/60 hover:text-white")
@@ -70,7 +70,7 @@ export default function ScheduleTabs({ offices, videos }: ScheduleTabsProps) {
 
       {/* 配信中セクション */}
       <section className="mb-10">
-        <h2 className="flex items-center gap-2 text-lg font-bold text-white mb-4">
+        <h2 className="font-handwriting flex items-center gap-2 text-xl font-bold text-white mb-4">
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ec4899] opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#ec4899]"></span>
@@ -98,7 +98,7 @@ export default function ScheduleTabs({ offices, videos }: ScheduleTabsProps) {
 
       {/* 配信予定セクション */}
       <section>
-        <h2 className="text-lg font-bold text-white mb-4">
+        <h2 className="font-handwriting text-xl font-bold text-white mb-4">
           配信予定（{upcomingVideos.length}）
         </h2>
 

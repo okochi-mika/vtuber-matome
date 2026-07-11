@@ -71,7 +71,7 @@ export default async function SchedulePage() {
           <p className="text-xs tracking-widest text-[#22d3ee] font-mono uppercase">
             Schedule
           </p>
-          <h1 className="text-3xl font-bold text-white mt-1 [text-shadow:1px_1px_3px_rgba(0,0,0,0.4)]">
+          <h1 className="font-handwriting text-4xl font-bold text-white mt-1 [text-shadow:1px_1px_3px_rgba(0,0,0,0.4)]">
             配信スケジュール
           </h1>
           <p className="text-sm text-white/60 mt-1">

@@ -75,14 +75,14 @@ export default function HomeTabs({
 
   return (
     <div>
-      {/* 事務所タブ */}
+      {/* 事務所タブ（手書きチョーク風フォント） */}
       <div className="flex gap-2 border-b border-white/15 mb-4">
         {offices.map((office) => (
           <button
             key={office.id}
             onClick={() => handleOfficeChange(office.id)}
             className={
-              "px-4 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors " +
+              "font-handwriting px-4 py-2 text-base font-semibold border-b-2 -mb-px transition-colors " +
               (activeOfficeId === office.id
                 ? "border-[#f2c744] text-[#f2c744]"
                 : "border-transparent text-white/50 hover:text-white")
@@ -99,7 +99,7 @@ export default function HomeTabs({
           <button
             onClick={() => handleGroupChange(ALL)}
             className={
-              "px-3 py-1.5 rounded-full text-xs font-semibold transition-colors " +
+              "font-handwriting px-3 py-1.5 rounded-full text-sm font-semibold transition-colors " +
               (activeGroupId === ALL
                 ? "bg-[#0891b2] text-white"
                 : "bg-white/10 border border-white/25 text-white/70 hover:border-[#0891b2]/60 hover:text-white")
@@ -112,7 +112,7 @@ export default function HomeTabs({
               key={group.id}
               onClick={() => handleGroupChange(group.id)}
               className={
-                "px-3 py-1.5 rounded-full text-xs font-semibold transition-colors " +
+                "font-handwriting px-3 py-1.5 rounded-full text-sm font-semibold transition-colors " +
                 (activeGroupId === group.id
                   ? "bg-[#0891b2] text-white"
                   : "bg-white/10 border border-white/25 text-white/70 hover:border-[#0891b2]/60 hover:text-white")
@@ -131,7 +131,7 @@ export default function HomeTabs({
           <button
             onClick={() => setActiveUnitId(ALL)}
             className={
-              "px-3 py-1 rounded-full text-xs font-medium transition-colors " +
+              "font-handwriting px-3 py-1 rounded-full text-sm font-medium transition-colors " +
               (activeUnitId === ALL
                 ? "bg-[#ec4899] text-white"
                 : "bg-white/10 border border-white/25 text-white/70 hover:border-[#ec4899]/60 hover:text-white")
@@ -144,7 +144,7 @@ export default function HomeTabs({
               key={unit.id}
               onClick={() => setActiveUnitId(unit.id)}
               className={
-                "px-3 py-1 rounded-full text-xs font-medium transition-colors " +
+                "font-handwriting px-3 py-1 rounded-full text-sm font-medium transition-colors " +
                 (activeUnitId === unit.id
                   ? "bg-[#ec4899] text-white"
                   : "bg-white/10 border border-white/25 text-white/70 hover:border-[#ec4899]/60 hover:text-white")
