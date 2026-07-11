@@ -76,7 +76,7 @@ export default function HomeTabs({
   return (
     <div>
       {/* 事務所タブ */}
-      <div className="flex gap-2 border-b border-[#e4e4ec] mb-4">
+      <div className="flex gap-2 border-b border-white/15 mb-4">
         {offices.map((office) => (
           <button
             key={office.id}
@@ -84,8 +84,8 @@ export default function HomeTabs({
             className={
               "px-4 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors " +
               (activeOfficeId === office.id
-                ? "border-[#0891b2] text-[#0891b2]"
-                : "border-transparent text-[#70707f] hover:text-[#14141c]")
+                ? "border-[#f2c744] text-[#f2c744]"
+                : "border-transparent text-white/50 hover:text-white")
             }
           >
             {office.name}
@@ -102,7 +102,7 @@ export default function HomeTabs({
               "px-3 py-1.5 rounded-full text-xs font-semibold transition-colors " +
               (activeGroupId === ALL
                 ? "bg-[#0891b2] text-white"
-                : "bg-white border border-[#e4e4ec] text-[#70707f] hover:border-[#0891b2]/50")
+                : "bg-white/10 border border-white/25 text-white/70 hover:border-[#0891b2]/60 hover:text-white")
             }
           >
             すべて
@@ -115,7 +115,7 @@ export default function HomeTabs({
                 "px-3 py-1.5 rounded-full text-xs font-semibold transition-colors " +
                 (activeGroupId === group.id
                   ? "bg-[#0891b2] text-white"
-                  : "bg-white border border-[#e4e4ec] text-[#70707f] hover:border-[#0891b2]/50")
+                  : "bg-white/10 border border-white/25 text-white/70 hover:border-[#0891b2]/60 hover:text-white")
               }
             >
               {group.name}
@@ -124,8 +124,9 @@ export default function HomeTabs({
         </div>
       )}
 
-      {/* ユニットタブ（具体的なグループが選ばれている時だけ表示） */}
-      {activeGroupId !== ALL && (
+      {/* ユニットタブ（具体的なグループが選ばれていて、かつそのグループに
+          ユニットが1件以上登録されている時だけ表示。グループタブと同じ考え方） */}
+      {activeGroupId !== ALL && unitsInGroup.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-6">
           <button
             onClick={() => setActiveUnitId(ALL)}
@@ -133,7 +134,7 @@ export default function HomeTabs({
               "px-3 py-1 rounded-full text-xs font-medium transition-colors " +
               (activeUnitId === ALL
                 ? "bg-[#ec4899] text-white"
-                : "bg-white border border-[#e4e4ec] text-[#70707f] hover:border-[#ec4899]/50")
+                : "bg-white/10 border border-white/25 text-white/70 hover:border-[#ec4899]/60 hover:text-white")
             }
           >
             すべて
@@ -146,7 +147,7 @@ export default function HomeTabs({
                 "px-3 py-1 rounded-full text-xs font-medium transition-colors " +
                 (activeUnitId === unit.id
                   ? "bg-[#ec4899] text-white"
-                  : "bg-white border border-[#e4e4ec] text-[#70707f] hover:border-[#ec4899]/50")
+                  : "bg-white/10 border border-white/25 text-white/70 hover:border-[#ec4899]/60 hover:text-white")
               }
             >
               {unit.name}
@@ -163,7 +164,7 @@ export default function HomeTabs({
       </div>
 
       {filteredTalents.length === 0 && (
-        <p className="text-[#70707f] text-sm">
+        <p className="text-white/50 text-sm">
           ここにはまだタレントが登録されていません。
         </p>
       )}

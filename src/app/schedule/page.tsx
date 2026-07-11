@@ -58,29 +58,29 @@ export default async function SchedulePage() {
   });
 
   return (
-    <main className="min-h-screen bg-[#f5f6fa] px-6 py-10">
+    <main className="chalkboard-bg min-h-screen px-6 py-10">
       <div className="max-w-[1600px] mx-auto">
         <Link
           href="/"
-          className="inline-flex items-center gap-1 text-sm text-[#70707f] hover:text-[#0891b2] mb-4"
+          className="inline-flex items-center gap-1 text-sm text-white/50 hover:text-[#22d3ee] mb-4"
         >
           ← トップに戻る
         </Link>
 
         <header className="mb-8">
-          <p className="text-xs tracking-widest text-[#0891b2] font-mono uppercase">
+          <p className="text-xs tracking-widest text-[#22d3ee] font-mono uppercase">
             Schedule
           </p>
-          <h1 className="text-3xl font-bold text-[#14141c] mt-1">
+          <h1 className="text-3xl font-bold text-white mt-1 [text-shadow:1px_1px_3px_rgba(0,0,0,0.4)]">
             配信スケジュール
           </h1>
-          <p className="text-sm text-[#70707f] mt-1">
+          <p className="text-sm text-white/60 mt-1">
             配信中・配信予定をまとめてチェック（
             <a
               href="https://holodex.net"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-[#0891b2]"
+              className="underline hover:text-[#22d3ee]"
             >
               Holodex
             </a>
@@ -93,6 +93,13 @@ export default async function SchedulePage() {
         )}
 
         <ScheduleTabs offices={offices} videos={enrichedVideos} />
+
+        {/* 黒板の下端の「チョーク受け」トレイ（トップページと揃えた飾り） */}
+        <div className="chalk-tray mt-12 h-7 rounded-b-2xl flex items-center gap-3 px-6">
+          <span className="chalk-piece bg-white" />
+          <span className="chalk-piece bg-[#f2c744]" />
+          <span className="chalk-piece bg-[#ec4899]" />
+        </div>
       </div>
     </main>
   );

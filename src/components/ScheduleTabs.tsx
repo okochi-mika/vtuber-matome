@@ -47,7 +47,7 @@ export default function ScheduleTabs({ offices, videos }: ScheduleTabsProps) {
             "px-4 py-2 rounded-full text-sm font-semibold transition-colors " +
             (activeOfficeId === ALL
               ? "bg-[#0891b2] text-white"
-              : "bg-white border border-[#e4e4ec] text-[#70707f] hover:border-[#0891b2]/50")
+              : "bg-white/10 border border-white/25 text-white/70 hover:border-[#0891b2]/60 hover:text-white")
           }
         >
           すべて
@@ -60,7 +60,7 @@ export default function ScheduleTabs({ offices, videos }: ScheduleTabsProps) {
               "px-4 py-2 rounded-full text-sm font-semibold transition-colors " +
               (activeOfficeId === office.id
                 ? "bg-[#0891b2] text-white"
-                : "bg-white border border-[#e4e4ec] text-[#70707f] hover:border-[#0891b2]/50")
+                : "bg-white/10 border border-white/25 text-white/70 hover:border-[#0891b2]/60 hover:text-white")
             }
           >
             {office.name}
@@ -70,7 +70,7 @@ export default function ScheduleTabs({ offices, videos }: ScheduleTabsProps) {
 
       {/* 配信中セクション */}
       <section className="mb-10">
-        <h2 className="flex items-center gap-2 text-lg font-bold text-[#14141c] mb-4">
+        <h2 className="flex items-center gap-2 text-lg font-bold text-white mb-4">
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ec4899] opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#ec4899]"></span>
@@ -79,7 +79,7 @@ export default function ScheduleTabs({ offices, videos }: ScheduleTabsProps) {
         </h2>
 
         {liveVideos.length === 0 ? (
-          <p className="text-sm text-[#70707f]">
+          <p className="text-sm text-white/50">
             現在配信中のチャンネルはありません
           </p>
         ) : (
@@ -98,12 +98,12 @@ export default function ScheduleTabs({ offices, videos }: ScheduleTabsProps) {
 
       {/* 配信予定セクション */}
       <section>
-        <h2 className="text-lg font-bold text-[#14141c] mb-4">
+        <h2 className="text-lg font-bold text-white mb-4">
           配信予定（{upcomingVideos.length}）
         </h2>
 
         {upcomingVideos.length === 0 ? (
-          <p className="text-sm text-[#70707f]">
+          <p className="text-sm text-white/50">
             現在、配信予定として登録されているものはありません
           </p>
         ) : (
@@ -125,6 +125,7 @@ export default function ScheduleTabs({ offices, videos }: ScheduleTabsProps) {
 
 // ---------------------------------------------
 // 動画1件分のカード
+// （黒板の上に貼られた写真のようなイメージで、カード自体は白のまま）
 // ---------------------------------------------
 function VideoCard({
   video,
@@ -149,7 +150,7 @@ function VideoCard({
       href={`https://www.youtube.com/watch?v=${video.id}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="group block rounded-2xl bg-white border border-[#e4e4ec] overflow-hidden shadow-sm hover:border-[#0891b2]/50 hover:shadow-md transition-all"
+      className="group block rounded-2xl bg-white border border-[#e4e4ec] overflow-hidden shadow-md hover:border-[#0891b2]/50 hover:shadow-lg transition-all"
     >
       <div className="relative">
         {/* eslint-disable-next-line @next/next/no-img-element */}

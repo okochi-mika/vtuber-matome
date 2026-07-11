@@ -27,6 +27,7 @@ type ManageTalentsFormProps = {
 };
 
 const UNAFFILIATED = "";
+const ALL = "__all__";
 
 export default function ManageTalentsForm({
   initialTalents,
@@ -38,6 +39,36 @@ export default function ManageTalentsForm({
   const [messages, setMessages] = useState<Record<string, string>>({});
   // どのタレントの「プロフィール編集」欄を開いているかを管理する
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  // ---------------------------------------------
+  // 絞り込みフィルター（並び替えページと同じ考え方）
+  // カードが多いとき、事務所・グループ・ユニットで表示を絞り込めるようにする
+  // ここで絞り込むのは「表示」だけで、talents自体（実データ）は変更しない
+  // ---------------------------------------------
+  const [filterOfficeId, setFilterOfficeId] = useState(ALL);
+  const [filterGroupId, setFilterGroupId] = useState(ALL);
+  const [filterUnitId, setFilterUnitId] = useState(ALL);
+
+  const groupsForFilter = groups.filter(
+    (g) => filterOfficeId === ALL || g.officeId === filterOfficeId
+  );
+
+  const unitsForFilter = units.filter(
+    (u) => filterGroupId === ALL || u.groupId === filterGroupId
+  );
+
+  const visibleTalents = talents.filter((talent) => {
+    if (filterOfficeId !== ALL && talent.officeId !== filterOfficeId) {
+      return false;
+    }
+    if (filterGroupId !== ALL && talent.groupId !== filterGroupId) {
+      return false;
+    }
+    if (filterUnitId !== ALL && !talent.unitIds.includes(filterUnitId)) {
+      return false;
+    }
+    return true;
+  });
 
   function toggleExpanded(talentId: string) {
     setExpandedIds((prev) => {
@@ -154,14 +185,16 @@ export default function ManageTalentsForm({
     }
   }
 
-  async function moveTalent(index: number, direction: "up" | "down") {
-    const newIndex = direction === "up" ? index - 1 : index + 1;
+  // 【変更点】フィルターで絞り込まれていても、並び替えは常に「全タレント配列」の
+  // 実際の位置に対して行う（表示上のindexではなく、talents本来のindexを使う）
+  async function moveTalent(realIndex: number, direction: "up" | "down") {
+    const newIndex = direction === "up" ? realIndex - 1 : realIndex + 1;
     if (newIndex < 0 || newIndex >= talents.length) return;
 
     const newTalents = [...talents];
-    [newTalents[index], newTalents[newIndex]] = [
+    [newTalents[realIndex], newTalents[newIndex]] = [
       newTalents[newIndex],
-      newTalents[index],
+      newTalents[realIndex],
     ];
     setTalents(newTalents);
 
@@ -176,7 +209,69 @@ export default function ManageTalentsForm({
 
   return (
     <div className="space-y-4">
-      {talents.map((talent, index) => {
+      {/* 絞り込みフィルター */}
+      <div className="rounded-2xl bg-white border border-[#e4e4ec] p-4 shadow-sm flex flex-wrap gap-2">
+        <select
+          value={filterOfficeId}
+          onChange={(e) => {
+            setFilterOfficeId(e.target.value);
+            setFilterGroupId(ALL);
+            setFilterUnitId(ALL);
+          }}
+          className="rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] text-sm px-3 py-1.5 outline-none focus:border-[#0891b2]/60"
+        >
+          <option value={ALL}>事務所: すべて</option>
+          {offices.map((office) => (
+            <option key={office.id} value={office.id}>
+              {office.name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={filterGroupId}
+          onChange={(e) => {
+            setFilterGroupId(e.target.value);
+            setFilterUnitId(ALL);
+          }}
+          className="rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] text-sm px-3 py-1.5 outline-none focus:border-[#0891b2]/60"
+        >
+          <option value={ALL}>グループ: すべて</option>
+          {groupsForFilter.map((group) => (
+            <option key={group.id} value={group.id}>
+              {group.name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={filterUnitId}
+          onChange={(e) => setFilterUnitId(e.target.value)}
+          className="rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] text-sm px-3 py-1.5 outline-none focus:border-[#0891b2]/60"
+        >
+          <option value={ALL}>ユニット: すべて</option>
+          {unitsForFilter.map((unit) => (
+            <option key={unit.id} value={unit.id}>
+              {unit.name}
+            </option>
+          ))}
+        </select>
+
+        <span className="ml-auto self-center text-xs text-[#70707f]">
+          {visibleTalents.length} / {talents.length} 件表示中
+        </span>
+      </div>
+
+      {visibleTalents.length === 0 && (
+        <p className="text-[#70707f] text-sm px-1 py-6 text-center">
+          条件に一致するタレントがいません
+        </p>
+      )}
+
+      {visibleTalents.map((talent) => {
+        // 表示は絞り込まれていても、上下移動は「全タレント配列」内の実際の位置で判定する
+        const realIndex = talents.findIndex((t) => t.id === talent.id);
+
         const groupsInOffice = groups.filter(
           (g) => g.officeId === talent.officeId
         );
@@ -192,16 +287,16 @@ export default function ManageTalentsForm({
             <div className="flex items-start gap-4">
               <div className="flex flex-col gap-1 pt-1">
                 <button
-                  onClick={() => moveTalent(index, "up")}
-                  disabled={index === 0}
+                  onClick={() => moveTalent(realIndex, "up")}
+                  disabled={realIndex === 0}
                   className="w-7 h-7 rounded-md bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] disabled:opacity-30"
                   aria-label="上に移動"
                 >
                   ↑
                 </button>
                 <button
-                  onClick={() => moveTalent(index, "down")}
-                  disabled={index === talents.length - 1}
+                  onClick={() => moveTalent(realIndex, "down")}
+                  disabled={realIndex === talents.length - 1}
                   className="w-7 h-7 rounded-md bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] disabled:opacity-30"
                   aria-label="下に移動"
                 >
