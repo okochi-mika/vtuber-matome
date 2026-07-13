@@ -1,146 +1,89 @@
 // ============================================
-// Prisma スキーマファイル
-// ここに「データベースにどんな表（テーブル）を作るか」を定義します。
-// 1つの model = 1つのテーブル、というイメージです。
+// Prisma スキーマファイル（MySQL版）
+// 【変更点】PostgreSQL(Supabase) → MySQL(phpMyAdmin/MAMP) へ切り替え
 // ============================================
 
-// --- 基本設定 ---
-// Prisma自体の設定。基本的にここは変更不要です。
 generator client {
   provider = "prisma-client-js"
 }
 
-// 使用するデータベースの種類と接続先を指定します。
-// url は .env ファイルに書いた DATABASE_URL という変数を読み込みます。
-// （Supabaseでプロジェクトを作ると、この接続文字列が発行されます）
+// MySQLでは基本的にpoolingの直接接続(directUrl)を分ける必要が無いため、
+// DATABASE_URL 1本だけを見るようにしている
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  // directUrl: マイグレーション実行時など、プーリングを経由しない
-  // 「直接接続」が必要な場面でPrismaが使う接続先
-  directUrl = env("DIRECT_URL")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 // ============================================
-// ここから実際のテーブル定義
+// ここから実際のテーブル定義（中身はPostgres版と同じ）
 // ============================================
 
-// 【事務所】ホロライブ、にじさんじ、あおぎり高校 など
 model Office {
-  // id: このレコードを一意に識別するID。cuid()で自動生成される文字列を使う
   id     String  @id @default(cuid())
-
-  // name: 事務所名（例: "ホロライブプロダクション"）
   name   String
-
-  // groups: この事務所に所属するグループの一覧（1つの事務所に複数グループ）
   groups Group[]
-
-  // talents: グループに所属していない（事務所直属の）タレント一覧
   talents Talent[]
 }
 
-// 【グループ】ホロライブ内の「ホロライブ」「hololive EN」など
 model Group {
   id       String   @id @default(cuid())
   name     String
-
-  // officeId: どの事務所に属しているかを表す外部キー（Officeのidを格納）
   officeId String
-
-  // office: officeIdを使ってOfficeテーブルと紐付ける設定
   office   Office   @relation(fields: [officeId], references: [id])
-
-  // units: このグループに属するユニットの一覧
   units    Unit[]
-
-  // talents: ユニットに所属していない（グループ直属の）タレント一覧
   talents  Talent[]
 }
 
-// 【ユニット】グループの中の「ReGLOSS」「秘密結社holoX」のような小グループ
 model Unit {
   id      String   @id @default(cuid())
   name    String
-
-  // groupId: どのグループに属しているか（Groupのidを格納）
   groupId String
   group   Group    @relation(fields: [groupId], references: [id])
-
-  // talents: このユニットに所属するタレント一覧（複数ユニット対応）
   talents Talent[]
 }
 
-// 【タレント】個々のVTuber本人
-// 事務所への所属は必須ですが、グループ・ユニットへの所属は任意です
-// （事務所直属のタレント、グループ直属でユニット未所属のタレントにも対応するため）
 model Talent {
   id       String    @id @default(cuid())
   name     String
 
-  // sortOrder: トップページでの表示順。数字が小さいほど先に表示される
   sortOrder Int      @default(0)
 
-  // officeId: どの事務所に属しているか（これは必須）
   officeId String
   office   Office    @relation(fields: [officeId], references: [id])
 
-  // groupId: どのグループに属しているか（任意。"?"を付けると空(null)を許可できる）
   groupId  String?
   group    Group?    @relation(fields: [groupId], references: [id])
 
-  // units: 所属するユニット一覧（複数のユニットに同時に所属できる）
   units    Unit[]
 
-  // channels: このタレントが持つチャンネル一覧
   channels Channel[]
 
-  // ---------------------------------------------
-  // ここから個別ページ用のプロフィール情報
-  // YouTube APIからは取得できない項目なので、管理画面から手入力する
-  // ---------------------------------------------
-
-  // 各SNSのURL（無ければ空欄のままでOK）
   twitterUrl   String?
   instagramUrl String?
   tiktokUrl    String?
-
-  // hashtag: 配信・切り抜き用のハッシュタグ（例: "#すいちゃんの証"）
   hashtag      String?
+
+  holodexTwitter     String?
+  // 【変更点】説明文は長くなることがあるため、MySQLのデフォルト文字数制限
+  // (String単体だとVARCHAR(191)になる)を避け、@db.Textで無制限にしておく
+  holodexDescription String? @db.Text
+  holodexInactive    Boolean   @default(false)
+  holodexSyncedAt    DateTime?
 }
 
-// 【チャンネル】YouTubeチャンネルやX(Twitter)アカウントなど、外部サービスとの連携情報
 model Channel {
   id         String   @id @default(cuid())
-
-  // talentId: このチャンネルが誰のものか（Talentのidを格納）
   talentId   String
-  // onDelete: Cascade → タレントが削除された時、紐づくチャンネルも自動的に削除される
   talent     Talent   @relation(fields: [talentId], references: [id], onDelete: Cascade)
-
-  // platform: "youtube" や "twitter" など、どのサービスかを表す文字列
   platform   String
-
-  // externalId: そのサービス上でのID
-  // （YouTubeなら「チャンネルID」、Xなら「ユーザー名」など）
   externalId String
-
-  // snapshots: このチャンネルの登録者数を記録した履歴（1日1件ずつ増えていく想定）
   snapshots  SubscriberSnapshot[]
 }
 
-// 【登録者数スナップショット】「いつ・何人だったか」を記録するログテーブル
-// これを毎日1件ずつ貯めていくことで「前日比」「先月比」のグラフが作れるようになります
 model SubscriberSnapshot {
   id        String   @id @default(cuid())
-
-  // channelId: どのチャンネルの記録か
   channelId String
   channel   Channel  @relation(fields: [channelId], references: [id])
-
-  // count: 記録した時点での登録者数
   count     Int
-
-  // fetchedAt: いつ記録したか（何も指定しなければ「今」が自動で入る）
   fetchedAt DateTime @default(now())
 }
