@@ -14,15 +14,15 @@ export default async function ManageTalentsPage() {
   });
 
   const offices = await prisma.office.findMany({
-    select: { id: true, name: true },
+    select: { id: true, name: true, officialChannelUrl: true },
   });
 
   const groups = await prisma.group.findMany({
-    select: { id: true, name: true, officeId: true },
+    select: { id: true, name: true, officeId: true, officialChannelUrl: true },
   });
 
   const units = await prisma.unit.findMany({
-    select: { id: true, name: true, groupId: true },
+    select: { id: true, name: true, groupId: true, officialChannelUrl: true },
   });
 
   const talentItems = talents.map((talent) => ({

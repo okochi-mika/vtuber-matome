@@ -11,6 +11,7 @@ export async function GET() {
     select: {
       id: true,
       name: true,
+      officialChannelUrl: true,
     },
   });
 
@@ -19,7 +20,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { name } = body;
+  const { name, officialChannelUrl } = body;
 
   if (!name) {
     return NextResponse.json(
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const office = await prisma.office.create({
-      data: { name },
+      data: { name, officialChannelUrl: officialChannelUrl || null },
     });
 
     return NextResponse.json(office);

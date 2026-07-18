@@ -1,6 +1,6 @@
 // ============================================
 // API Route: /api/offices/[id]
-// PATCH  → 事務所名を更新する
+// PATCH  → 事務所名・公式チャンネルURLを更新する
 // DELETE → 事務所を削除する（中にグループが残っている場合は削除できない）
 // ============================================
 
@@ -14,12 +14,12 @@ type RouteParams = {
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const officeId = params.id;
   const body = await request.json();
-  const { name } = body;
+  const { name, officialChannelUrl } = body;
 
   try {
     await prisma.office.update({
       where: { id: officeId },
-      data: { name },
+      data: { name, officialChannelUrl: officialChannelUrl || null },
     });
 
     return NextResponse.json({ success: true });

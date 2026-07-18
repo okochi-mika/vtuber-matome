@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-type Office = { id: string; name: string };
-type Group = { id: string; name: string; officeId: string };
-type Unit = { id: string; name: string; groupId: string };
+type Office = { id: string; name: string; officialChannelUrl: string | null };
+type Group = { id: string; name: string; officeId: string; officialChannelUrl: string | null };
+type Unit = { id: string; name: string; groupId: string; officialChannelUrl: string | null };
 
 type EditStructureListProps = {
   initialOffices: Office[];
@@ -23,7 +23,7 @@ export default function EditStructureList({
   const [message, setMessage] = useState("");
 
   // ---------------------------------------------
-  // 事務所名の変更をその場で反映する
+  // 事務所の変更をその場で反映する（保存ボタンを押すまではローカルの変更）
   // ---------------------------------------------
   function handleOfficeNameChange(officeId: string, name: string) {
     setOffices((prev) =>
@@ -31,8 +31,16 @@ export default function EditStructureList({
     );
   }
 
+  function handleOfficeChannelUrlChange(officeId: string, url: string) {
+    setOffices((prev) =>
+      prev.map((o) =>
+        o.id === officeId ? { ...o, officialChannelUrl: url || null } : o
+      )
+    );
+  }
+
   // ---------------------------------------------
-  // グループ名の変更をその場で反映する（保存ボタンを押すまではローカルの変更）
+  // グループの変更をその場で反映する
   // ---------------------------------------------
   function handleGroupNameChange(groupId: string, name: string) {
     setGroups((prev) =>
@@ -40,9 +48,25 @@ export default function EditStructureList({
     );
   }
 
+  function handleGroupChannelUrlChange(groupId: string, url: string) {
+    setGroups((prev) =>
+      prev.map((g) =>
+        g.id === groupId ? { ...g, officialChannelUrl: url || null } : g
+      )
+    );
+  }
+
   function handleUnitNameChange(unitId: string, name: string) {
     setUnits((prev) =>
       prev.map((u) => (u.id === unitId ? { ...u, name } : u))
+    );
+  }
+
+  function handleUnitChannelUrlChange(unitId: string, url: string) {
+    setUnits((prev) =>
+      prev.map((u) =>
+        u.id === unitId ? { ...u, officialChannelUrl: url || null } : u
+      )
     );
   }
 
@@ -53,7 +77,10 @@ export default function EditStructureList({
     const response = await fetch(`/api/offices/${office.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: office.name }),
+      body: JSON.stringify({
+        name: office.name,
+        officialChannelUrl: office.officialChannelUrl,
+      }),
     });
     setMessage(response.ok ? "事務所を保存しました" : "保存に失敗しました");
   }
@@ -82,7 +109,11 @@ export default function EditStructureList({
     const response = await fetch(`/api/groups/${group.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: group.name, officeId: group.officeId }),
+      body: JSON.stringify({
+        name: group.name,
+        officeId: group.officeId,
+        officialChannelUrl: group.officialChannelUrl,
+      }),
     });
     setMessage(response.ok ? "グループを保存しました" : "保存に失敗しました");
   }
@@ -111,7 +142,11 @@ export default function EditStructureList({
     const response = await fetch(`/api/units/${unit.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: unit.name, groupId: unit.groupId }),
+      body: JSON.stringify({
+        name: unit.name,
+        groupId: unit.groupId,
+        officialChannelUrl: unit.officialChannelUrl,
+      }),
     });
     setMessage(response.ok ? "ユニットを保存しました" : "保存に失敗しました");
   }
@@ -136,6 +171,9 @@ export default function EditStructureList({
   return (
     <div className="rounded-2xl bg-white border border-[#e4e4ec] p-5 shadow-sm space-y-6">
       <h2 className="text-[#14141c] font-semibold">グループ・ユニットの編集</h2>
+      <p className="text-xs text-[#70707f] -mt-4">
+        公式チャンネルURLはトップページのタブ付近に「公式チャンネルを見る」として表示されます
+      </p>
 
       {offices.map((office) => {
         const groupsInOffice = groups.filter((g) => g.officeId === office.id);
@@ -143,27 +181,38 @@ export default function EditStructureList({
         return (
           <div key={office.id} className="space-y-4">
             {/* 事務所の編集行 */}
-            <div className="flex gap-2 items-center">
+            <div className="space-y-1.5">
+              <div className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  value={office.name}
+                  onChange={(e) =>
+                    handleOfficeNameChange(office.id, e.target.value)
+                  }
+                  className="flex-1 rounded-lg bg-white border border-[#e4e4ec] text-[#14141c] px-3 py-1.5 text-sm font-medium outline-none focus:border-[#0891b2]/60"
+                />
+                <button
+                  onClick={() => handleSaveOffice(office)}
+                  className="rounded-lg bg-[#0891b2] text-white text-xs font-semibold px-3 py-1.5 hover:opacity-90"
+                >
+                  保存
+                </button>
+                <button
+                  onClick={() => handleDeleteOffice(office)}
+                  className="rounded-lg bg-[#ec4899] text-white text-xs font-semibold px-3 py-1.5 hover:opacity-90"
+                >
+                  削除
+                </button>
+              </div>
               <input
                 type="text"
-                value={office.name}
+                value={office.officialChannelUrl ?? ""}
                 onChange={(e) =>
-                  handleOfficeNameChange(office.id, e.target.value)
+                  handleOfficeChannelUrlChange(office.id, e.target.value)
                 }
-                className="flex-1 rounded-lg bg-white border border-[#e4e4ec] text-[#14141c] px-3 py-1.5 text-sm font-medium outline-none focus:border-[#0891b2]/60"
+                placeholder="公式チャンネルURL（任意）"
+                className="w-full rounded-lg bg-white border border-[#e4e4ec] text-[#14141c] px-3 py-1.5 text-xs outline-none focus:border-[#0891b2]/60"
               />
-              <button
-                onClick={() => handleSaveOffice(office)}
-                className="rounded-lg bg-[#0891b2] text-white text-xs font-semibold px-3 py-1.5 hover:opacity-90"
-              >
-                保存
-              </button>
-              <button
-                onClick={() => handleDeleteOffice(office)}
-                className="rounded-lg bg-[#ec4899] text-white text-xs font-semibold px-3 py-1.5 hover:opacity-90"
-              >
-                削除
-              </button>
             </div>
 
             {groupsInOffice.length === 0 && (
@@ -181,54 +230,76 @@ export default function EditStructureList({
                   className="rounded-xl bg-[#f5f6fa] p-4 space-y-3"
                 >
                   {/* グループの編集行 */}
-                  <div className="flex gap-2 items-center">
+                  <div className="space-y-1.5">
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={group.name}
+                        onChange={(e) =>
+                          handleGroupNameChange(group.id, e.target.value)
+                        }
+                        className="flex-1 rounded-lg bg-white border border-[#e4e4ec] text-[#14141c] px-3 py-1.5 text-sm outline-none focus:border-[#0891b2]/60"
+                      />
+                      <button
+                        onClick={() => handleSaveGroup(group)}
+                        className="rounded-lg bg-[#0891b2] text-white text-xs font-semibold px-3 py-1.5 hover:opacity-90"
+                      >
+                        保存
+                      </button>
+                      <button
+                        onClick={() => handleDeleteGroup(group)}
+                        className="rounded-lg bg-[#ec4899] text-white text-xs font-semibold px-3 py-1.5 hover:opacity-90"
+                      >
+                        削除
+                      </button>
+                    </div>
                     <input
                       type="text"
-                      value={group.name}
+                      value={group.officialChannelUrl ?? ""}
                       onChange={(e) =>
-                        handleGroupNameChange(group.id, e.target.value)
+                        handleGroupChannelUrlChange(group.id, e.target.value)
                       }
-                      className="flex-1 rounded-lg bg-white border border-[#e4e4ec] text-[#14141c] px-3 py-1.5 text-sm outline-none focus:border-[#0891b2]/60"
+                      placeholder="公式チャンネルURL（任意）"
+                      className="w-full rounded-lg bg-white border border-[#e4e4ec] text-[#14141c] px-3 py-1.5 text-xs outline-none focus:border-[#0891b2]/60"
                     />
-                    <button
-                      onClick={() => handleSaveGroup(group)}
-                      className="rounded-lg bg-[#0891b2] text-white text-xs font-semibold px-3 py-1.5 hover:opacity-90"
-                    >
-                      保存
-                    </button>
-                    <button
-                      onClick={() => handleDeleteGroup(group)}
-                      className="rounded-lg bg-[#ec4899] text-white text-xs font-semibold px-3 py-1.5 hover:opacity-90"
-                    >
-                      削除
-                    </button>
                   </div>
 
                   {/* このグループに属するユニットの編集行 */}
                   <div className="pl-4 space-y-2">
                     {unitsInGroup.map((unit) => (
-                      <div key={unit.id} className="flex gap-2 items-center">
-                        <span className="text-[#70707f] text-xs">└</span>
+                      <div key={unit.id} className="space-y-1.5">
+                        <div className="flex gap-2 items-center">
+                          <span className="text-[#70707f] text-xs">└</span>
+                          <input
+                            type="text"
+                            value={unit.name}
+                            onChange={(e) =>
+                              handleUnitNameChange(unit.id, e.target.value)
+                            }
+                            className="flex-1 rounded-lg bg-white border border-[#e4e4ec] text-[#14141c] px-3 py-1.5 text-sm outline-none focus:border-[#0891b2]/60"
+                          />
+                          <button
+                            onClick={() => handleSaveUnit(unit)}
+                            className="rounded-lg bg-[#0891b2] text-white text-xs font-semibold px-3 py-1.5 hover:opacity-90"
+                          >
+                            保存
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUnit(unit)}
+                            className="rounded-lg bg-[#ec4899] text-white text-xs font-semibold px-3 py-1.5 hover:opacity-90"
+                          >
+                            削除
+                          </button>
+                        </div>
                         <input
                           type="text"
-                          value={unit.name}
+                          value={unit.officialChannelUrl ?? ""}
                           onChange={(e) =>
-                            handleUnitNameChange(unit.id, e.target.value)
+                            handleUnitChannelUrlChange(unit.id, e.target.value)
                           }
-                          className="flex-1 rounded-lg bg-white border border-[#e4e4ec] text-[#14141c] px-3 py-1.5 text-sm outline-none focus:border-[#0891b2]/60"
+                          placeholder="公式チャンネルURL（任意）"
+                          className="w-full rounded-lg bg-white border border-[#e4e4ec] text-[#14141c] pl-7 pr-3 py-1.5 text-xs outline-none focus:border-[#0891b2]/60"
                         />
-                        <button
-                          onClick={() => handleSaveUnit(unit)}
-                          className="rounded-lg bg-[#0891b2] text-white text-xs font-semibold px-3 py-1.5 hover:opacity-90"
-                        >
-                          保存
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUnit(unit)}
-                          className="rounded-lg bg-[#ec4899] text-white text-xs font-semibold px-3 py-1.5 hover:opacity-90"
-                        >
-                          削除
-                        </button>
                       </div>
                     ))}
                     {unitsInGroup.length === 0 && (

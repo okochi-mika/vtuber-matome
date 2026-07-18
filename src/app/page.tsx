@@ -5,15 +5,15 @@ import Link from "next/link";
 
 export default async function HomePage() {
   const offices = await prisma.office.findMany({
-    select: { id: true, name: true },
+    select: { id: true, name: true, officialChannelUrl: true },
   });
 
   const groups = await prisma.group.findMany({
-    select: { id: true, name: true, officeId: true },
+    select: { id: true, name: true, officeId: true, officialChannelUrl: true },
   });
 
   const units = await prisma.unit.findMany({
-    select: { id: true, name: true, groupId: true },
+    select: { id: true, name: true, groupId: true, officialChannelUrl: true },
   });
 
   const talents = await prisma.talent.findMany({
@@ -33,6 +33,9 @@ export default async function HomePage() {
 
       return {
         talentId: talent.id,
+        // 【追加】検索機能用に、DB上のタレント名も一緒に持たせる
+        // （画面にはchannelInfo.titleを表示しているが、検索は名前・チャンネル名の両方に対して行う）
+        name: talent.name,
         officeId: talent.officeId,
         groupId: talent.groupId,
         unitIds: talent.units.map((u) => u.id),

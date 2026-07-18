@@ -26,10 +26,60 @@ function formatDate(dateString: string): string {
   });
 }
 
+// ---------------------------------------------
+// SNSロゴ（外部アイコンライブラリを使わず、インラインSVGで軽量に用意する）
+// currentColorで塗っているので、親のtext-[#0891b2]の色をそのまま引き継ぐ
+// ---------------------------------------------
+function YouTubeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 shrink-0">
+      <path d="M23.498 6.186a2.994 2.994 0 0 0-2.107-2.117C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.391.524A2.994 2.994 0 0 0 .502 6.186 31.26 31.26 0 0 0 0 12a31.26 31.26 0 0 0 .502 5.814 2.994 2.994 0 0 0 2.107 2.117c1.886.524 9.391.524 9.391.524s7.505 0 9.391-.524a2.994 2.994 0 0 0 2.107-2.117A31.26 31.26 0 0 0 24 12a31.26 31.26 0 0 0-.502-5.814zM9.75 15.568V8.432L15.818 12l-6.068 3.568z" />
+    </svg>
+  );
+}
+
+function XIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 shrink-0">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
+// ---------------------------------------------
+// 統計バッジ（登録者・動画数・総再生数）
+// 【変更点】地味なグレーの箱だったのを、色分けした大きめの数字バッジにして
+// ユーザーローカル系VTuberランキングサイトのような賑やかさを出す
+// ---------------------------------------------
+function StatBadge({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: string;
+  color: "cyan" | "pink" | "amber";
+}) {
+  const colorClasses = {
+    cyan: "bg-[#0891b2]/10 text-[#0891b2]",
+    pink: "bg-[#ec4899]/10 text-[#ec4899]",
+    amber: "bg-[#f59e0b]/15 text-[#b45309]",
+  }[color];
+
+  return (
+    <div className={"rounded-xl py-3.5 px-2 text-center " + colorClasses}>
+      <p className="font-mono text-lg sm:text-xl font-bold tabular-nums leading-tight">
+        {value}
+      </p>
+      <p className="text-[10px] font-semibold mt-1 opacity-80">{label}</p>
+    </div>
+  );
+}
+
 export default async function TalentPage({ params }: PageParams) {
   const talent = await prisma.talent.findUnique({
     where: { id: params.id },
-    include: { channels: true },
+    include: { channels: true, office: true, group: true },
   });
 
   const primaryChannel = talent?.channels[0];
@@ -101,7 +151,7 @@ export default async function TalentPage({ params }: PageParams) {
         {/* プロフィールヘッダー + 右側パネル（配信中/配信予定/最新アーカイブ） */}
         <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6 mb-8 items-stretch">
           {/* 左: プロフィールカード */}
-          <div className="rounded-2xl bg-white border border-[#e4e4ec] shadow-sm p-6">
+          <div className="rounded-2xl bg-white border border-[#e4e4ec] shadow-sm p-6 flex flex-col">
             <div className="flex items-start gap-5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -129,14 +179,27 @@ export default async function TalentPage({ params }: PageParams) {
                   {channelInfo.title}
                 </p>
 
-                {/* SNSリンク */}
+                {/* 【追加】所属バッジ（事務所・グループ） */}
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  <span className="inline-flex items-center rounded-full bg-[#0891b2] text-white text-xs font-semibold px-3 py-1">
+                    {talent.office.name}
+                  </span>
+                  {talent.group && (
+                    <span className="inline-flex items-center rounded-full bg-white border border-[#e4e4ec] text-[#70707f] text-xs font-semibold px-3 py-1">
+                      {talent.group.name}
+                    </span>
+                  )}
+                </div>
+
+                {/* SNSリンク（見つけやすいようにロゴアイコンを添える） */}
                 <div className="flex items-center gap-3 mt-3 flex-wrap">
                   <a
                     href={`https://www.youtube.com/channel/${primaryChannel.externalId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs font-semibold text-[#0891b2] hover:underline"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#0891b2] hover:underline"
                   >
+                    <YouTubeIcon />
                     YouTube
                   </a>
                   {talent.twitterUrl && (
@@ -144,8 +207,9 @@ export default async function TalentPage({ params }: PageParams) {
                       href={talent.twitterUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs font-semibold text-[#0891b2] hover:underline"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#0891b2] hover:underline"
                     >
+                      <XIcon />
                       X (Twitter)
                     </a>
                   )}
@@ -178,27 +242,37 @@ export default async function TalentPage({ params }: PageParams) {
               </div>
             </div>
 
-            {/* 統計情報 */}
-            <div className="mt-5 pt-5 border-t border-[#e4e4ec] grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-lg bg-[#f5f6fa] py-3">
-                <p className="font-mono text-base text-[#0891b2]">
-                  {formatNumber(channelInfo.subscriberCount)}
-                </p>
-                <p className="text-[10px] text-[#70707f] mt-1">登録者</p>
-              </div>
-              <div className="rounded-lg bg-[#f5f6fa] py-3">
-                <p className="font-mono text-base text-[#0891b2]">
-                  {formatNumber(channelInfo.videoCount)}
-                </p>
-                <p className="text-[10px] text-[#70707f] mt-1">動画数</p>
-              </div>
-              <div className="rounded-lg bg-[#f5f6fa] py-3">
-                <p className="font-mono text-base text-[#0891b2]">
-                  {formatNumber(channelInfo.viewCount)}
-                </p>
-                <p className="text-[10px] text-[#70707f] mt-1">総再生数</p>
-              </div>
+            {/* 統計情報（色分けバッジ） */}
+            <div className="mt-5 pt-5 border-t border-[#e4e4ec] grid grid-cols-3 gap-3">
+              <StatBadge
+                color="cyan"
+                label="登録者"
+                value={formatNumber(channelInfo.subscriberCount)}
+              />
+              <StatBadge
+                color="pink"
+                label="動画数"
+                value={formatNumber(channelInfo.videoCount)}
+              />
+              <StatBadge
+                color="amber"
+                label="総再生数"
+                value={formatNumber(channelInfo.viewCount)}
+              />
             </div>
+
+            {/* 【追加】自己紹介文（Holodexから同期したdescription）
+                カード下部の余白を埋めつつ、実際に役立つ情報を表示する */}
+            {talent.holodexDescription && (
+              <div className="mt-5 pt-5 border-t border-[#e4e4ec]">
+                <p className="text-xs font-semibold text-[#70707f] mb-2">
+                  自己紹介
+                </p>
+                <p className="text-sm text-[#14141c] whitespace-pre-line leading-relaxed">
+                  {talent.holodexDescription}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* 右: 配信中/配信予定/最新アーカイブのパネル */}

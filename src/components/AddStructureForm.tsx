@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-type Office = { id: string; name: string };
-type Group = { id: string; name: string; officeId: string };
-type Unit = { id: string; name: string; groupId: string };
+type Office = { id: string; name: string; officialChannelUrl: string | null };
+type Group = { id: string; name: string; officeId: string; officialChannelUrl: string | null };
+type Unit = { id: string; name: string; groupId: string; officialChannelUrl: string | null };
 
 type AddStructureFormProps = {
   initialOffices: Office[];
@@ -24,15 +24,18 @@ export default function AddStructureForm({
 
   // 新規事務所
   const [newOfficeName, setNewOfficeName] = useState("");
+  const [newOfficeChannelUrl, setNewOfficeChannelUrl] = useState("");
 
   // 新規グループ
   const [groupOfficeId, setGroupOfficeId] = useState(offices[0]?.id ?? "");
   const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupChannelUrl, setNewGroupChannelUrl] = useState("");
 
   // 新規ユニット
   const groupOptionsForUnit = groups;
   const [unitGroupId, setUnitGroupId] = useState(groups[0]?.id ?? "");
   const [newUnitName, setNewUnitName] = useState("");
+  const [newUnitChannelUrl, setNewUnitChannelUrl] = useState("");
 
   async function handleCreateOffice() {
     if (!newOfficeName) {
@@ -42,12 +45,16 @@ export default function AddStructureForm({
     const response = await fetch("/api/offices", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newOfficeName }),
+      body: JSON.stringify({
+        name: newOfficeName,
+        officialChannelUrl: newOfficeChannelUrl || null,
+      }),
     });
     if (response.ok) {
       const newOffice = await response.json();
       setOffices((prev) => [...prev, newOffice]);
       setNewOfficeName("");
+      setNewOfficeChannelUrl("");
       setMessage(`事務所「${newOffice.name}」を追加しました`);
     } else {
       setMessage("事務所の追加に失敗しました");
@@ -62,12 +69,17 @@ export default function AddStructureForm({
     const response = await fetch("/api/groups", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newGroupName, officeId: groupOfficeId }),
+      body: JSON.stringify({
+        name: newGroupName,
+        officeId: groupOfficeId,
+        officialChannelUrl: newGroupChannelUrl || null,
+      }),
     });
     if (response.ok) {
       const newGroup = await response.json();
       setGroups((prev) => [...prev, newGroup]);
       setNewGroupName("");
+      setNewGroupChannelUrl("");
       setMessage(`グループ「${newGroup.name}」を追加しました`);
     } else {
       setMessage("グループの追加に失敗しました");
@@ -82,12 +94,17 @@ export default function AddStructureForm({
     const response = await fetch("/api/units", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newUnitName, groupId: unitGroupId }),
+      body: JSON.stringify({
+        name: newUnitName,
+        groupId: unitGroupId,
+        officialChannelUrl: newUnitChannelUrl || null,
+      }),
     });
     if (response.ok) {
       const newUnit = await response.json();
       setUnits((prev) => [...prev, newUnit]);
       setNewUnitName("");
+      setNewUnitChannelUrl("");
       setMessage(`ユニット「${newUnit.name}」を追加しました`);
     } else {
       setMessage("ユニットの追加に失敗しました");
@@ -104,11 +121,13 @@ export default function AddStructureForm({
         事務所・グループ・ユニットの追加
       </h2>
       <p className="text-xs text-[#70707f] -mt-4">
-        既存の項目の編集・削除は下の「グループ・ユニットの編集」から行えます
+        既存の項目の編集・削除は下の「グループ・ユニットの編集」から行えます。
+        公式チャンネルURL（任意）は、タレントではなく組織全体のチャンネル（例:
+        hololive公式チャンネル）を登録する欄です。
       </p>
 
       {/* 事務所を追加 */}
-      <div className="border-t border-[#e4e4ec] pt-4">
+      <div className="border-t border-[#e4e4ec] pt-4 space-y-2">
         <label className="block text-xs text-[#70707f] mb-1">
           新しい事務所
         </label>
@@ -127,10 +146,17 @@ export default function AddStructureForm({
             追加
           </button>
         </div>
+        <input
+          type="text"
+          value={newOfficeChannelUrl}
+          onChange={(e) => setNewOfficeChannelUrl(e.target.value)}
+          placeholder="公式チャンネルURL（任意）"
+          className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 text-sm outline-none focus:border-[#0891b2]/60"
+        />
       </div>
 
       {/* グループを追加 */}
-      <div className="border-t border-[#e4e4ec] pt-4">
+      <div className="border-t border-[#e4e4ec] pt-4 space-y-2">
         <label className="block text-xs text-[#70707f] mb-1">
           新しいグループ
         </label>
@@ -160,10 +186,17 @@ export default function AddStructureForm({
             追加
           </button>
         </div>
+        <input
+          type="text"
+          value={newGroupChannelUrl}
+          onChange={(e) => setNewGroupChannelUrl(e.target.value)}
+          placeholder="公式チャンネルURL（任意）"
+          className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 text-sm outline-none focus:border-[#0891b2]/60"
+        />
       </div>
 
       {/* ユニットを追加 */}
-      <div className="border-t border-[#e4e4ec] pt-4">
+      <div className="border-t border-[#e4e4ec] pt-4 space-y-2">
         <label className="block text-xs text-[#70707f] mb-1">
           新しいユニット
         </label>
@@ -193,6 +226,13 @@ export default function AddStructureForm({
             追加
           </button>
         </div>
+        <input
+          type="text"
+          value={newUnitChannelUrl}
+          onChange={(e) => setNewUnitChannelUrl(e.target.value)}
+          placeholder="公式チャンネルURL（任意）"
+          className="w-full rounded-lg bg-[#f5f6fa] border border-[#e4e4ec] text-[#14141c] px-3 py-2 text-sm outline-none focus:border-[#0891b2]/60"
+        />
       </div>
 
       {message && <p className="text-sm text-[#0891b2]">{message}</p>}

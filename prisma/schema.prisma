@@ -1,47 +1,61 @@
 // ============================================
 // Prisma スキーマファイル（MySQL版）
-// 【変更点】PostgreSQL(Supabase) → MySQL(phpMyAdmin/MAMP) へ切り替え
 // ============================================
 
 generator client {
   provider = "prisma-client-js"
 }
 
-// MySQLでは基本的にpoolingの直接接続(directUrl)を分ける必要が無いため、
-// DATABASE_URL 1本だけを見るようにしている
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 // ============================================
-// ここから実際のテーブル定義（中身はPostgres版と同じ）
+// ここから実際のテーブル定義
 // ============================================
 
+// 【事務所】ホロライブ、にじさんじ、あおぎり高校 など
 model Office {
   id     String  @id @default(cuid())
   name   String
+
+  // 【追加】公式チャンネル（グループ全体のまとめチャンネルなど）のURL
+  // タレント本人ではないので、Talentとしては登録せず、こちらにリンクとして持たせる
+  officialChannelUrl String?
+
   groups Group[]
   talents Talent[]
 }
 
+// 【グループ】ホロライブ内の「ホロライブ」「hololive EN」など
 model Group {
   id       String   @id @default(cuid())
   name     String
   officeId String
   office   Office   @relation(fields: [officeId], references: [id])
+
+  // 【追加】このグループの公式チャンネルURL
+  officialChannelUrl String?
+
   units    Unit[]
   talents  Talent[]
 }
 
+// 【ユニット】グループの中の「ReGLOSS」「秘密結社holoX」のような小グループ
 model Unit {
   id      String   @id @default(cuid())
   name    String
   groupId String
   group   Group    @relation(fields: [groupId], references: [id])
+
+  // 【追加】このユニットの公式チャンネルURL
+  officialChannelUrl String?
+
   talents Talent[]
 }
 
+// 【タレント】個々のVTuber本人
 model Talent {
   id       String    @id @default(cuid())
   name     String
@@ -64,13 +78,12 @@ model Talent {
   hashtag      String?
 
   holodexTwitter     String?
-  // 【変更点】説明文は長くなることがあるため、MySQLのデフォルト文字数制限
-  // (String単体だとVARCHAR(191)になる)を避け、@db.Textで無制限にしておく
   holodexDescription String? @db.Text
   holodexInactive    Boolean   @default(false)
   holodexSyncedAt    DateTime?
 }
 
+// 【チャンネル】YouTubeチャンネルやX(Twitter)アカウントなど、外部サービスとの連携情報
 model Channel {
   id         String   @id @default(cuid())
   talentId   String
@@ -80,6 +93,7 @@ model Channel {
   snapshots  SubscriberSnapshot[]
 }
 
+// 【登録者数スナップショット】「いつ・何人だったか」を記録するログテーブル
 model SubscriberSnapshot {
   id        String   @id @default(cuid())
   channelId String

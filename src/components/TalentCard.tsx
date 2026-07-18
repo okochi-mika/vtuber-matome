@@ -45,9 +45,7 @@ export default function TalentCard({ talentId, channel }: TalentCardProps) {
               {channel.title}
             </h2>
           </div>
-          <p className="text-xs text-[#70707f] mt-0.5">
-            ID: {channel.channelId}
-          </p>
+          {/* 【変更点】トップページのカードにはYouTubeチャンネルIDの表示は不要のため削除 */}
         </div>
       </div>
 

@@ -39,8 +39,9 @@ export default function ScheduleTabs({ offices, videos }: ScheduleTabsProps) {
 
   return (
     <div>
-      {/* 事務所タブ（手書きチョーク風フォント） */}
-      <div className="flex flex-wrap gap-2 mb-8">
+      {/* 事務所タブ（手書きチョーク風フォント）
+          【変更点】トップページと揃えて、右側に余白を作り右端まで詰まらないようにする */}
+      <div className="flex flex-wrap gap-2 mb-8 pr-10 sm:pr-24 lg:pr-32">
         <button
           onClick={() => setActiveOfficeId(ALL)}
           className={

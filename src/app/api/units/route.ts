@@ -14,6 +14,7 @@ export async function GET() {
       id: true,
       name: true,
       groupId: true,
+      officialChannelUrl: true,
     },
   });
 
@@ -22,7 +23,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { name, groupId } = body;
+  const { name, groupId, officialChannelUrl } = body;
 
   if (!name || !groupId) {
     return NextResponse.json(
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const unit = await prisma.unit.create({
-      data: { name, groupId },
+      data: { name, groupId, officialChannelUrl: officialChannelUrl || null },
     });
 
     return NextResponse.json(unit);

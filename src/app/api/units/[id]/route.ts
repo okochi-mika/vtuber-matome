@@ -1,6 +1,6 @@
 // ============================================
 // API Route: /api/units/[id]
-// PATCH  → ユニット名・所属グループを更新する
+// PATCH  → ユニット名・所属グループ・公式チャンネルURLを更新する
 // DELETE → ユニットを削除する（中にタレントが残っている場合は削除できない）
 // ============================================
 
@@ -14,12 +14,12 @@ type RouteParams = {
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const unitId = params.id;
   const body = await request.json();
-  const { name, groupId } = body;
+  const { name, groupId, officialChannelUrl } = body;
 
   try {
     await prisma.unit.update({
       where: { id: unitId },
-      data: { name, groupId },
+      data: { name, groupId, officialChannelUrl: officialChannelUrl || null },
     });
 
     return NextResponse.json({ success: true });
